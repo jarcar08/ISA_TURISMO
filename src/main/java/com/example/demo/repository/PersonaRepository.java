@@ -9,5 +9,7 @@ import org.springframework.stereotype.Repository;
 public interface PersonaRepository extends JpaRepository<Persona, Integer> {
 	List<Persona> findByperNombresContainingIgnoreCase(String nombre);
 	Persona findByperDni(String valor);
+	List<Persona> findByPerDniContainingIgnoreCase(String dni);
+
 
 }

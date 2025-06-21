@@ -8,13 +8,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-
 @Service("personaservice")
 public class PersonaServiceImpl implements PersonaService {
 	@Autowired
 	@Qualifier("personarepository")
 	private PersonaRepository personaRepository;
-	
+
 	@Override
 	public List<Persona> listaAllPersonas() {
 		// TODO Auto-generated method stub
@@ -57,6 +56,12 @@ public class PersonaServiceImpl implements PersonaService {
 	public Persona BuscarPorDni(String Dni) {
 		// TODO Auto-generated method stub
 		return personaRepository.findByperDni(Dni);
+	}
+
+	@Override
+	public List<Persona> buscarPorDniParcial(String dni) {
+		// TODO Auto-generated method stub
+		return personaRepository.findByPerDniContainingIgnoreCase(dni);
 	}
 
 }

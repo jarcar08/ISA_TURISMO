@@ -17,5 +17,7 @@ public interface PersonaService {
 	List<Persona> buscarPorNombre(String valor);
 
 	Persona BuscarPorDni(String Dni);
+	
+	List<Persona> buscarPorDniParcial(String dni);
 
 }

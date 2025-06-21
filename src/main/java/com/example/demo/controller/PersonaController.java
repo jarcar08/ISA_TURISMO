@@ -46,9 +46,23 @@ public class PersonaController {
 			@RequestParam(name = "valor", required = false) String valor) {
 		if ("nombre".equalsIgnoreCase(tipo) && valor != null && !valor.isEmpty()) {
 			return personaService.buscarPorNombre(valor);
+		} else if ("dni".equalsIgnoreCase(tipo) && valor != null && !valor.isEmpty()) {
+			return personaService.buscarPorDniParcial(valor);
 		}
 		return personaService.listaAllPersonas();
 	}
+
+	/*
+	 * @GetMapping("/buscar")
+	 * 
+	 * @ResponseBody public List<Persona> buscarPersonas(@RequestParam(name =
+	 * "tipo", required = false) String tipo,
+	 * 
+	 * @RequestParam(name = "valor", required = false) String valor) { if
+	 * ("nombre".equalsIgnoreCase(tipo) && valor != null && !valor.isEmpty()) {
+	 * return personaService.buscarPorNombre(valor); } return
+	 * personaService.listaAllPersonas(); }
+	 */
 
 	// Para editar Persona
 	@GetMapping("/editar/{id}")
@@ -83,19 +97,18 @@ public class PersonaController {
 
 	@InitBinder
 	public void initBinder(WebDataBinder binder) {
-	    binder.registerCustomEditor(TipoPasajero.class, "tipopasajero", new PropertyEditorSupport() {
-	        @Override
-	        public void setAsText(String text) {
-	            if (text == null || text.isEmpty()) {
-	                setValue(null); // <- esto evita el error cuando el select es ""
-	            } else {
-	                TipoPasajero tp = new TipoPasajero();
-	                tp.setTpId(Integer.parseInt(text));
-	                setValue(tp);
-	            }
-	        }
-	    });
+		binder.registerCustomEditor(TipoPasajero.class, "tipopasajero", new PropertyEditorSupport() {
+			@Override
+			public void setAsText(String text) {
+				if (text == null || text.isEmpty()) {
+					setValue(null); // <- esto evita el error cuando el select es ""
+				} else {
+					TipoPasajero tp = new TipoPasajero();
+					tp.setTpId(Integer.parseInt(text));
+					setValue(tp);
+				}
+			}
+		});
 	}
-
 
 }

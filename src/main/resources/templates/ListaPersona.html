@@ -14,15 +14,18 @@
 
 		<!-- Botón para Buscar Persona -->
 		<div class="mb-3">
-			<label for="searchValor" class="form-label">Buscar por nombre</label>
-			<input type="text" class="form-control" id="searchValor"
-				oninput="buscarPorNombre()">
+			<label for="searchValor" class="form-label">Buscar por nombre
+				o DNI</label> <input type="text" class="form-control" id="searchValor"
+				placeholder="Escribe un nombre o DNI...">
 		</div>
+
+		<!-- Para Mostrar N° Resultados -->
+		<div id="resultadoConteo" class="mb-3 text-muted"></div>
 
 		<!-- Botón para agregar nueva Persona -->
 		<button class="btn btn-success mb-3" data-bs-toggle="modal"
 			data-bs-target="#personaModal" onclick="abrirModal()">Nuevo
-			Persona</button>
+			Persona +</button>
 
 		<!-- Tabla de usuarios -->
 		<table class="table table-bordered table-striped">
@@ -136,10 +139,8 @@
             return response.json();
         })
         .then(data => {
-            // Cambiar título del modal a "Editar Usuario"
             document.getElementById("modalTitle").innerText = "Editar Persona";
 
-            // Rellenar los campos con los datos de la persona
             document.getElementById("perId").value = data.perId;
             document.getElementById("perDni").value = data.perDni;
             document.getElementById("perApellidoPaterno").value = data.perApellidoPaterno;
@@ -153,7 +154,6 @@
                 document.getElementById("tipopasajero").value = "";
             }
                        
-            // Mostrar el modal
             const modal = new bootstrap.Modal(document.getElementById("personaModal"));
             modal.show();
         })
@@ -171,7 +171,7 @@
         .then(response => {
             if (response.status === 204) {
                 alert("✅ Persona eliminada correctamente.");
-                actualizarTabla(); // Recargar tabla
+                actualizarTabla();
             } else if (response.status === 404) {
                 alert("❌ Persona no encontrada.");
             } else {
@@ -184,9 +184,7 @@
         });
     }
 }
-
-  
-        
+       
     //para guardar persona
     document.getElementById("personForm").addEventListener("submit", function (event) {
         event.preventDefault();
@@ -207,13 +205,12 @@
             if (!response.ok) {
                 throw new Error("Error al guardar persona");
             }
-            return response.text(); // devuelve el texto plano: "ok" o "error: ..."
+            return response.text();
         })
         .then(data => {
             const modal = bootstrap.Modal.getInstance(document.getElementById("personaModal"));
             modal.hide(); 
             
-         // Limpiar el campo de búsqueda después de guardar o editar
             document.getElementById("searchValor").value = "";
             actualizarTabla();
 
@@ -232,21 +229,24 @@
     });
 
     //Para BuscarPersona
-   function buscarPorNombre() {
-    const valor = document.getElementById("searchValor").value.trim();
-    let url = "/persona/buscar";
-
+   document.getElementById("searchValor").addEventListener("input", function () {
+    const valor = this.value.trim();
+    
     if (valor === "") {
-        url += "?tipo=todos&valor=";
-    } else {
-        url += `?tipo=nombre&valor=${encodeURIComponent(valor)}`;
+        document.getElementById("resultadoConteo").textContent = "";
+        actualizarTabla();
+        return;
     }
 
-    fetch(url)
+    const tipo = /^\d+$/.test(valor) ? "dni" : "nombre";
+
+    fetch(`/persona/buscar?tipo=${tipo}&valor=${encodeURIComponent(valor)}`)
         .then(response => response.json())
         .then(personas => {
             const tbody = document.getElementById("tablaPersonas");
             tbody.innerHTML = "";
+            
+            document.getElementById("resultadoConteo").textContent = `Se encontraron ${personas.length} resultado(s).`;
 
             personas.forEach(persona => {
                 const nombreCompleto = `${persona.perNombres} ${persona.perApellidoPaterno} ${persona.perApellidoMaterno}`;
@@ -268,9 +268,10 @@
             });
         })
         .catch(error => {
-            console.error("Error al buscar por nombre:", error);
+            console.error("Error al buscar personas:", error);
         });
-}
+});
+
 
     
     
@@ -280,7 +281,7 @@ function actualizarTabla() {
         .then(response => response.json())
         .then(personas => {
             const tbody = document.getElementById("tablaPersonas");
-            tbody.innerHTML = "";  // Limpiar la tabla antes de agregar los nuevos usuarios
+            tbody.innerHTML = "";  
 
             personas.forEach(persona => {
                 const nombreCompleto = `${persona.perNombres} ${persona.perApellidoPaterno} ${persona.perApellidoMaterno}`;
@@ -308,7 +309,7 @@ function actualizarTabla() {
         });
 }
 
-// Llamar a actualizarTabla al cargar la página
+//actualizarTabla al cargar la página
 window.onload = actualizarTabla;
 
     </script>
