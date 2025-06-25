@@ -56,7 +56,11 @@
 		<dependency>
     		<groupId>com.mysql</groupId>
    			<artifactId>mysql-connector-j</artifactId>
-    		<version>9.2.0</version> <!-- o la más reciente compatible -->
+    		<version>9.2.0</version>
+		</dependency>
+		<dependency>
+    		<groupId>org.springframework.boot</groupId>
+    		<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>	
 	</dependencies>
 

@@ -4,6 +4,9 @@ import java.util.List;
 import com.example.demo.entity.Persona;
 import com.example.demo.repository.PersonaRepository;
 import com.example.demo.service.PersonaService;
+
+import jakarta.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -21,6 +24,7 @@ public class PersonaServiceImpl implements PersonaService {
 	}
 
 	@Override
+	@Transactional
 	public Persona savePersona(Persona persona) {
 		// TODO Auto-generated method stub
 		return personaRepository.save(persona);
