@@ -13,21 +13,21 @@ import java.io.IOException;
 @Component
 public class CustomSuccessHandler implements AuthenticationSuccessHandler{
 
+	//para asignar la ruta por cada rol
 	@Override
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
         for (GrantedAuthority authority : authentication.getAuthorities()) {
             String role = authority.getAuthority();
-            if (role.equals("ADMIN")) {
+            if (role.equals("ROLE_ADMIN")) {
                 response.sendRedirect("/homeAdmin");
                 return;
-            } else if (role.equals("GUEST")) {
+            } else if (role.equals("ROLE_GUEST")) {
                 response.sendRedirect("/homeGuest");
                 return;
             }
         }
-        // Por si no tiene ninguno de los roles esperados
         response.sendRedirect("/");
     }
 

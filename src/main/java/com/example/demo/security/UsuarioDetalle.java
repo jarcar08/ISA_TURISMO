@@ -15,30 +15,29 @@ public class UsuarioDetalle implements UserDetails {
 
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
-		return Collections.singleton(new SimpleGrantedAuthority(usuario.getRol().getRolNombre()) // Asegúrate de que Rol
-																									// tenga el atributo
-																									// 'rolNombre'
+		return Collections.singleton(new SimpleGrantedAuthority("ROLE_" + usuario.getRol().getRolNombre()) 
 		);
 	}
 
 	@Override
 	public String getPassword() {
+		System.out.println("getpassword: " + usuario.getUsuContrasenia());
 		return usuario.getUsuContrasenia();
 	}
 
 	@Override
 	public String getUsername() {
-		return usuario.getUsuNombre(); // Usamos el nombre de usuario
+		return usuario.getUsuNombre();
 	}
 
 	@Override
 	public boolean isAccountNonExpired() {
-		return true; // Puedes personalizar esto si usas expiración
+		return true;
 	}
 
 	@Override
 	public boolean isAccountNonLocked() {
-		return usuario.getUsuEstado() == 1; // Solo permite si estado es 1 (activo)
+		return usuario.getUsuEstado() == 1;
 	}
 
 	@Override

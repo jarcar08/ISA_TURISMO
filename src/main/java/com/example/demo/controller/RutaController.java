@@ -39,6 +39,7 @@ public class RutaController {
 	@Qualifier("rolservice")
 	private RolService rolService;
 
+	//Encriptacion de password
 	@Autowired
 	private PasswordEncoder passwordEncoder;
 
@@ -48,25 +49,29 @@ public class RutaController {
 		return new ModelAndView("VistaPublica");
 	}
 
+	//Vista para Usuario
 	@GetMapping("/homeGuest")
 	public ModelAndView homeGuest() {
-		return new ModelAndView("HomeGuest"); // Crea esta vista .html
+		return new ModelAndView("HomeGuest");
 	}
 
+	//Vista para Admin
 	@GetMapping("/homeAdmin")
 	public ModelAndView homeAdmin() {
-		return new ModelAndView("HomeAdmin"); // Asegúrate de tener HomeAdmin.html
+		return new ModelAndView("HomeAdmin");
 	}
 
+	//Funcion para cargar modelos
 	@GetMapping("/registro")
 	public ModelAndView mostrarRegistro() {
 		ModelAndView mav = new ModelAndView("registroUnificado");
 		mav.addObject("persona", new Persona());
 		mav.addObject("usuario", new Usuario());
-		mav.addObject("listaPasajero", tipoPasajeroService.listaAllTipopasajeros());// 👈 este es clave
+		mav.addObject("listaPasajero", tipoPasajeroService.listaAllTipopasajeros());
 		return mav;
 	}
 
+	//Funcion para registrar datos
 	@PostMapping("/registro")
 	public String procesarRegistro(@ModelAttribute("persona") Persona persona,
 			@ModelAttribute("usuario") Usuario usuario, HttpServletRequest request,  RedirectAttributes redirectAttributes) {
@@ -80,20 +85,26 @@ public class RutaController {
 		usuario.setPersona(personaGuardada);
 		usuario.setUsuNombre(personaGuardada.getPerCorreo());
 
-		// ✅ Recuperar y encriptar contraseña desde el formulario
-		String rawPassword = request.getParameter("usuario.usuContrasenia");
-		if (rawPassword != null && !rawPassword.isEmpty()) {
-			usuario.setUsuContrasenia(passwordEncoder.encode(rawPassword));
+		// ✅ Recuperar contraseña
+		String pass = request.getParameter("usuario.usuContrasenia").trim();
+		System.out.println("⚠ Contraseña ingresada:" + pass);
+		
+		//validar, encriptar y enviar a bd
+		if (pass != null && !pass.isEmpty()) {	
+			usuario.setUsuContrasenia(passwordEncoder.encode(pass));
+
 		} else {
 			System.out.println("⚠ Contraseña no proporcionada.");
-			return "redirect:/registro?error=password"; // puedes manejar esto en el frontend
+			return "redirect:/registro?error=password";
 		}
-
-		usuario.setRol(rolService.obtenerPorNombre("GUEST")); // Rol por defecto
+		
+		//rol y estado
+		usuario.setRol(rolService.obtenerPorNombre("GUEST"));
 		usuario.setUsuEstado(1);
-
+		
+		//guardar usuario en bd
 		usuarioService.saveUser(usuario);
-
+		//mensajes en consola de confirmacion
 		System.out.println("Persona: " + persona.getPerCorreo());
 		System.out.println("Usuario registrado con éxito!");
 
@@ -106,5 +117,11 @@ public class RutaController {
 	public ModelAndView login() {
 		return new ModelAndView("Login");
 	}
+	
+	//vista de Error
+	@GetMapping("/error/403")
+    public String error403() {
+        return "error/403";
+    }
 
 }

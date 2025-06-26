@@ -24,8 +24,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/homeAdmin").hasAuthority("ADMIN")
-                .requestMatchers("/homeGuest").hasAuthority("GUEST")
+                .requestMatchers("/homeAdmin").hasRole("ADMIN")
+                .requestMatchers("/homeGuest").hasRole("GUEST")
+                .requestMatchers("/persona/ListaPersona").hasRole("ADMIN")
                 .requestMatchers("/","/registro", "/login", "/css/**", "/js/**").permitAll()
                 .anyRequest().authenticated()
             )
@@ -38,6 +39,7 @@ public class SecurityConfig {
             .logoutSuccessUrl("/")
             .permitAll()
             )
+            .exceptionHandling(ex -> ex.accessDeniedPage("/error/403"))
             .build();
     }
 	

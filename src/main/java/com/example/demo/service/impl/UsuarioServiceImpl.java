@@ -1,25 +1,19 @@
 package com.example.demo.service.impl;
 
 import com.example.demo.service.UsuarioService;
-
 import jakarta.transaction.Transactional;
-
 import java.util.List;
 import com.example.demo.entity.Usuario;
 import com.example.demo.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service("usuarioservice")
 public class UsuarioServiceImpl implements UsuarioService {
 	@Autowired
 	@Qualifier("usuariorepository")
 	private UsuarioRepository usuarioRepository;
-
-	@Autowired
-	private PasswordEncoder passwordEncoder;
 
 	@Override
 	public List<Usuario> listaAllUser() {
@@ -31,8 +25,6 @@ public class UsuarioServiceImpl implements UsuarioService {
 	@Transactional
 	public Usuario saveUser(Usuario usuario) {
 		// TODO Auto-generated method stub
-		String hash = passwordEncoder.encode(usuario.getUsuContrasenia());
-		usuario.setUsuContrasenia(hash);
 		return usuarioRepository.save(usuario);
 	}
 
