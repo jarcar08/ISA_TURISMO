@@ -75,7 +75,8 @@ public class PersonaController {
 		return ResponseEntity.ok(persona);
 	}
 
-	// Listar Personas
+
+	//Mostrar Personas
 	@GetMapping("ListaPersona")
 	public ModelAndView listAllPersonas() {
 		ModelAndView mav = new ModelAndView("ListaPersona");

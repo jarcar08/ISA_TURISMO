@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="/img/favicon.ico">
+<title>Gestión de Usuarios</title>
+<link rel="stylesheet"
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script
+	src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+</head>
+<body>
+
+<nav th:replace="~{fragments/header :: navbar}"></nav>
+
+	<div class="container mt-4">
+		<h2 class="mb-4">Lista de Usuarios</h2>
+
+		<!-- Botón para Buscar Persona -->
+		<div class="mb-3">
+			<label for="searchValor" class="form-label">Buscar por nombre
+				o correo</label> <input type="text" class="form-control" id="searchValor"
+				placeholder="Escribe un nombre o correo....">
+		</div>
+
+		<!-- Para Mostrar N° Resultados -->
+		<div id="resultadoConteo" class="mb-3 text-muted"></div>
+
+		<!-- Botón para agregar nueva Usuario -->
+		<button class="btn btn-success mb-3" data-bs-toggle="modal"
+			data-bs-target="#usuarioModal" onclick="abrirModal()">Nuevo
+			Usuario +</button>
+
+		<!-- Tabla de usuarios -->
+		<table class="table table-bordered table-striped">
+			<thead>
+				<tr>
+					<th>Id</th>
+					<th>Correo</th>
+					<th>Datos</th>
+					<th>Rol</th>
+					<th>Estado</th>
+					<th>Fecha Registro</th>
+				</tr>
+			</thead>
+			<tbody id="tablaUsuarios">
+				<!-- Las filas se cargan dinámicamente con JavaScript -->
+			</tbody>
+		</table>
+
+		<!-- Modal para insertar/guardar -->
+		<div class="modal fade" id="usuarioModal" tabindex="-1"
+			aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<form id="userForm" th:action="@{/usuario/guardar}" method="post">
+						<div class="modal-header">
+							<h5 class="modal-title" id="modalTitle">Nuevo Usuario</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal"
+								aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<input type="hidden" id="usuId" name="usuId">
+							<div class="row">
+
+								<div class="col-md-12 mb-3">
+  <label for="persona" class="form-label">Persona <span class="text-danger">*</span></label>
+  <select class="form-select select-persona" id="persona" name="persona.perId" onchange="actualizarCorreoDesdePersona()">
+    <option value="">-- Selecciona Persona --</option>
+    <option th:each="per : ${listaPersona}" th:value="${per.perId}"
+            th:data-correo="${per.perCorreo}"
+            th:text="${per.perNombres + ' ' + per.perApellidoPaterno + ' ' + per.perApellidoMaterno}">
+    </option>
+  </select>
+</div>
+
+
+
+								<div class="col-md-6 mb-3">
+									<label for="usuNombre" class="form-label">Correo <span
+										class="text-danger">*</span>
+									</label> <input type="email" class="form-control" id="usuNombre"
+										name="usuNombre" readonly required>
+
+								</div>
+
+								<!-- Contraseña -->
+								<div class="col-md-6 mb-3">
+									<label for="usuContrasenia" class="form-label">Contraseña
+										<span class="text-danger">*</span>
+									</label> <input type="password" class="form-control"
+										id="usuContrasenia" name="usuContrasenia" required>
+								</div>
+
+								<div class="col-md-6 mb-3">
+									<label for="rol" class="form-label">Rol </label> <select
+										class="form-select" id="rol" name="rol">
+										<option value="">-- Selecciona un Rol --</option>
+										<option th:each="rol : ${listaRol}" th:value="${rol.rolId}"
+											th:text="${rol.rolNombre}"></option>
+									</select>
+								</div>
+
+								<div class="col-md-6 mb-3">
+									<label for="usuEstado" class="form-label">Estado</label> <select
+										class="form-select" id="usuEstado" name="usuEstado" required>
+										<option value="1" selected>Activo</option>
+										<option value="0">Inactivo</option>
+									</select>
+								</div>
+
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="submit" class="btn btn-primary">Guardar</button>
+							<button type="button" class="btn btn-secondary"
+								data-bs-dismiss="modal">Cancelar</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+		<!-- Scripts -->
+		<script
+			src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+		<script>
+		
+		//actualizarCorreo
+		function actualizarCorreoDesdePersona() {
+		    const select = document.getElementById("persona");
+		    const correoInput = document.getElementById("usuNombre");
+		    const selectedOption = select.options[select.selectedIndex];
+
+		    const correo = selectedOption.getAttribute("data-correo");
+		    if (correo) {
+		        correoInput.value = correo;
+		    } else {
+		        correoInput.value = "";
+		    }
+		}
+			
+		//Carga Modal
+		function abrirModal() {
+		    document.getElementById("modalTitle").innerText = "Nuevo Usuario";
+		    document.getElementById("usuId").value = "";
+		    document.getElementById("persona").value = "";
+		    document.getElementById("usuNombre").value = "";
+		    document.getElementById("usuContrasenia").value = "";
+		    document.getElementById("rol").value = "";
+		    document.getElementById("usuEstado").value = "1"; // Activo por defecto
+		    
+		    document.getElementById("usuContrasenia").setAttribute("required", "required");
+		}
+		
+		//editar Usuario
+		function editarUsuario(id) {
+		    fetch('/usuario/editar/' + id)
+		        .then(response => {
+		            if (!response.ok) {
+		                throw new Error('Error al obtener los datos del usuario');
+		            }
+		            return response.json();
+		        })
+		        .then(data => {
+		            document.getElementById("modalTitle").innerText = "Editar Usuario";
+
+		            // Llena los campos del modal
+		            document.getElementById("usuId").value = data.usuId;
+
+		            // Selecciona la persona en el combo
+		            const personaSelect = document.getElementById("persona");
+		            if (personaSelect) {
+		                personaSelect.value = data.persona?.perId ?? "";
+		                // También actualiza el input del correo
+		                const correo = personaSelect.querySelector(`option[value="${data.persona?.perId}"]`)?.getAttribute("data-correo");
+		                document.getElementById("usuNombre").value = correo ?? "";
+		            }
+
+		            // Rol
+		            document.getElementById("rol").value = data.rol?.rolId ?? "";
+
+		            // Estado
+		            document.getElementById("usuEstado").value = data.usuEstado?.toString() ?? "1";
+
+		            // ⚠️ No se llena la contraseña (campo debe quedar vacío)
+		            document.getElementById("usuContrasenia").value = "";
+					document.getElementById("usuContrasenia").removeAttribute("required"); // ✅ Quita required
+
+
+		            // Abrir modal
+		            const modal = new bootstrap.Modal(document.getElementById("usuarioModal"));
+		            modal.show();
+		        })
+		        .catch(error => {
+		            console.error('Error:', error);
+		            alert('❌ Ocurrió un error al cargar los datos del usuario');
+		        });
+		}
+
+		
+
+		//Eliminar usuario
+		function eliminarUsuario(id) {
+		    if (confirm("¿Estás seguro de que deseas eliminar este usuario?")) {
+		        fetch(`/usuario/eliminar/${id}`, {
+		            method: "DELETE"
+		        })
+		        .then(response => {
+		            if (response.status === 204) {
+		                alert("✅ Usuario eliminado correctamente.");
+		                actualizarTabla();
+		            } else if (response.status === 404) {
+		                alert("❌ Usuario no encontrado.");
+		            } else {
+		                throw new Error("Error inesperado");
+		            }
+		        })
+		        .catch(error => {
+		            console.error("Error:", error);
+		            alert("❌ Ocurrió un error al eliminar el usuario.");
+		        });
+		    }
+		}
+
+		
+		// Para guardar usuario
+		document.getElementById("userForm").addEventListener("submit", function (event) {
+		    event.preventDefault();
+
+		    const form = event.target;
+		    const formData = new FormData(form);
+		    
+		    const personaId = formData.get("persona.perId");
+		    if (!personaId) {
+		        alert("⚠️ Por favor selecciona una persona.");
+		        return;
+		    }
+
+		    const usuId = formData.get('usuId');
+		    if (!usuId) {
+		        formData.delete('usuId'); // Si es nuevo usuario, no mandamos ID
+		    }
+
+		    fetch("/usuario/guardar", {
+		        method: "POST",
+		        body: formData
+		    })
+		    .then(response => {
+		        if (!response.ok) {
+		            throw new Error("Error al guardar usuario");
+		        }
+		        return response.text();
+		    })
+		    .then(data => {
+		        const modal = bootstrap.Modal.getInstance(document.getElementById("usuarioModal"));
+		        modal.hide();
+
+		        document.getElementById("searchValor").value = "";
+		        actualizarTabla();
+
+		        if (data === "ok") {
+		            alert("✅ Usuario registrado exitosamente.");
+		        } else if (data.startsWith("error")) {
+		            alert("❌ " + data.replace("error:", "").trim());
+		        } else {
+		            alert("⚠️ Ocurrió un error desconocido.");
+		        }
+		    })
+		    .catch(error => {
+		        console.error("Error:", error);
+		        alert("❌ Ocurrió un error al guardar usuario.");
+		    });
+		});
+		
+		
+		
+		
+		// Para Buscar Usuario
+		document.getElementById("searchValor").addEventListener("input", function () {
+		    const valor = this.value.trim();
+
+		    if (valor === "") {
+		        document.getElementById("resultadoConteo").textContent = "";
+		        actualizarTabla();
+		        return;
+		    }
+
+		    const tipo = valor.includes("@") ? "correo" : "nombre";
+
+		    fetch(`/usuario/buscar?tipo=${tipo}&valor=${encodeURIComponent(valor)}`)
+		        .then(response => response.json())
+		        .then(usuarios => {
+		            const tbody = document.getElementById("tablaUsuarios");
+		            tbody.innerHTML = "";
+
+		            document.getElementById("resultadoConteo").textContent = `Se encontraron ${usuarios.length} resultado(s).`;
+
+		            usuarios.forEach(usuario => {
+		                const persona = usuario.persona;
+		                const nombreCompleto = `${persona.perNombres} ${persona.perApellidoPaterno} ${persona.perApellidoMaterno}`;
+		                const rol = usuario.rol?.rolNombre ?? 'Sin rol';
+		                const estado = usuario.usuEstado === 1 ? 'Activo' : 'Inactivo';
+
+		                const fila = document.createElement("tr");
+		                fila.innerHTML = `
+		                    <td>${usuario.usuId}</td>
+		                    <td>${usuario.usuNombre}</td>
+		                    <td>${nombreCompleto}</td>
+		                    <td>${rol}</td>
+		                    <td>${estado}</td>
+		                    <td>${usuario.usuFechaRegistro ?? '-'}</td>
+		                    <td>
+		                        <button class="btn btn-warning btn-sm" onclick="editarUsuario(${usuario.usuId})">Editar</button>
+		                        <button class="btn btn-danger btn-sm" onclick="eliminarUsuario(${usuario.usuId})">Eliminar</button>
+		                    </td>
+		                `;
+		                tbody.appendChild(fila);
+		            });
+		        })
+		        .catch(error => {
+		            console.error("Error al buscar usuarios:", error);
+		        });
+		});
+
+		// Actualizar tabla de Usuarios
+		function actualizarTabla() {
+		    fetch("/usuario/buscar?tipo=todos&valor=")
+		        .then(response => response.json())
+		        .then(usuarios => {
+		            const tbody = document.getElementById("tablaUsuarios");
+		            tbody.innerHTML = "";
+
+		            usuarios.forEach(usuario => {
+		                const persona = usuario.persona;
+		                const nombreCompleto = `${persona.perNombres} ${persona.perApellidoPaterno} ${persona.perApellidoMaterno}`;
+		                const rol = usuario.rol?.rolNombre ?? 'Sin rol';
+		                const estadoHTML = usuario.usuEstado === 1
+		                ? '<span class="badge bg-success">Activo</span>'
+		                : '<span class="badge bg-danger">Inactivo</span>';
+
+		                const fecha = usuario.usuFechaRegistro ?? '-';
+
+		                const fila = document.createElement("tr");
+		                fila.innerHTML = `
+		                    <td>${usuario.usuId}</td>
+		                    <td>${usuario.usuNombre}</td>
+		                    <td>${nombreCompleto}</td>
+		                    <td>${rol}</td>
+		                    <td>${estadoHTML}</td>
+		                    <td>${fecha}</td>
+		                    <td>
+		                        <button class="btn btn-warning btn-sm" onclick="editarUsuario(${usuario.usuId})">Editar</button>
+		                        <button class="btn btn-danger btn-sm" onclick="eliminarUsuario(${usuario.usuId})">Eliminar</button>
+		                    </td>
+		                `;
+		                tbody.appendChild(fila);
+		            });
+		        })
+		        .catch(error => {
+		            console.error("Error al cargar los usuarios:", error);
+		            alert("❌ Ocurrió un error al cargar los usuarios.");
+		        });
+		}
+
+//actualizarTabla al cargar la página
+window.onload = actualizarTabla;
+//Inicializa Select2 en el combo de persona
+  document.addEventListener("DOMContentLoaded", function () {
+    $('#persona').select2({
+      placeholder: "Buscar persona por nombre",
+      allowClear: true,
+      width: '100%',
+      language: {
+        noResults: function () {
+          return "No se encontró ninguna persona";
+        }
+      }
+    });
+    
+    // Cargar la tabla al abrir
+    actualizarTabla();
+  });
+    </script>
+	</div>
+</body>
+</html>

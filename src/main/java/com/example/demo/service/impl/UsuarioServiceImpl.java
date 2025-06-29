@@ -59,4 +59,9 @@ public class UsuarioServiceImpl implements UsuarioService {
 		return usuarioRepository.findByusuNombreContainingIgnoreCase(valor);
 	}
 
+	@Override
+	public boolean existePorPersonaId(Long perId) {
+		// TODO Auto-generated method stub
+		 return usuarioRepository.existsByPersonaPerId(perId);	}
+
 }

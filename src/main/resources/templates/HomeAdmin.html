@@ -2,25 +2,103 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8">
-<title>Inicio - Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="/img/favicon.ico">
+<title>Página de Inicio</title>
+<!-- Bootstrap CDN -->
 <link
-	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
 	rel="stylesheet">
+<style>
+body {
+	margin: 0;
+	padding: 0;
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	background-color: #f5f5f5; /* Gris claro y suave */
+}
+
+footer {
+	background-color: #e9ecef;
+	text-align: center;
+	padding: 20px 0;
+	color: #6c757d;
+}
+
+.dashboard-card {
+	margin-bottom: 20px;
+}
+
+.card-body {
+	padding: 1rem;
+}
+</style>
 </head>
+
+<div th:replace="~{fragments/header :: navbar}"></div>
+
 <body>
-	<div class="container mt-4">
-		<h2>
-			Bienvenido, <span th:if="${#authentication != null}"
-				th:text="${#authentication.name}">Usuario</span> <span
-				th:if="${#authentication == null}">Invitado</span>
-		</h2>
-		<p>Aquí puedes gestionar usuarios, roles, reportes, etc.</p>
+	
+	
+	<div th:replace="~{fragments/header :: navbar}"></div>
+	
+
+	<!-- Dashboard -->
+	<div class="container mt-5 pt-5">
+		<div class="row">
+			<!-- Clima Actual -->
+			<div class="col-md-4">
+				<div class="card dashboard-card">
+					<div class="card-header bg-primary text-white">Clima Actual
+						en Pucallpa</div>
+					<div class="card-body">
+						<h5 class="card-title">Nublado</h5>
+						<p class="card-text">Temperatura: 25°C</p>
+						<p class="card-text">Máxima: 27°C | Mínima: 22°C</p>
+						<p class="card-text">Probabilidad de lluvia: 70%</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- Precio del Dólar -->
+			<div class="col-md-4">
+				<div class="card dashboard-card">
+					<div class="card-header bg-success text-white">Precio del
+						Dólar</div>
+					<div class="card-body">
+						<h5 class="card-title">Compra: S/ 3.635</h5>
+						<p class="card-text">Venta: S/ 3.645</p>
+						<p class="card-text">Fuente: SUNAT</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- Indicadores de Recursos Humanos -->
+			<div class="col-md-4">
+				<div class="card dashboard-card">
+					<div class="card-header bg-warning text-dark">Recursos
+						Humanos</div>
+					<div class="card-body">
+						<h5 class="card-title">Total de Empleados: 150</h5>
+						<p class="card-text">Contratos Activos: 140</p>
+						<p class="card-text">Boletas Emitidas: 135</p>
+						<p class="card-text">Cumpleaños Hoy: 3</p>
+					</div>
+				</div>
+			</div>
+		</div>
 	</div>
 
-	<!-- Botón logout -->
-	<form th:action="@{/logout}" method="post">
-		<button type="submit" class="btn btn-danger mt-3">Cerrar
-			sesión</button>
-	</form>
+	<!-- Pie de página -->
+	<footer>
+		<p>&copy; 2025 RETAIL SYSTEM CORP. Todos los derechos
+			reservados.</p>
+	</footer>
+
+	<!-- Bootstrap JS -->
+	<script
+		src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

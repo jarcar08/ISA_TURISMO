@@ -23,7 +23,7 @@ public class Usuario {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "usuId")
-	private int usuId;
+	private Integer usuId;
 
 	@Column(name = "usuNombre")
 	private String usuNombre;
@@ -40,7 +40,7 @@ public class Usuario {
 	private Rol rol;
 
 	@Column(name = "usuEstado")
-	private int usuEstado;
+	private Integer usuEstado;
 
 	@Column(name = "usuFechaRegistro", insertable = false, updatable = false)
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")

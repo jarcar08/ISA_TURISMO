@@ -55,6 +55,7 @@ public class RutaController {
 		return new ModelAndView("HomeGuest");
 	}
 
+	
 	//Vista para Admin
 	@GetMapping("/homeAdmin")
 	public ModelAndView homeAdmin() {

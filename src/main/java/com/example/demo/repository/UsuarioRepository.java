@@ -9,5 +9,8 @@ import org.springframework.stereotype.Repository;
 public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
 	Usuario findByUsuNombre(String usuNombre);
 	List<Usuario> findByusuNombreContainingIgnoreCase(String nombre);
+	boolean existsByPersonaPerId(Long perId);
+	void deleteById(Integer id);
+
 
 }
