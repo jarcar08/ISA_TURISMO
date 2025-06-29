@@ -17,5 +17,7 @@ public interface UsuarioService {
 	Usuario obtenerPorNombreUsuario(String correo);
 	
 	List<Usuario> buscarPorNombre(String valor);
+	
+	boolean existePorPersonaId(Long perId);
 
 }

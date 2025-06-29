@@ -1,32 +1,95 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-<title>Login</title>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="/img/favicon.ico">
+<title>Iniciar Sesión</title>
 <link rel="stylesheet"
 	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<link rel="stylesheet"
+	href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+<style>
+body {
+	background: #f8f9fa;
+}
+
+.login-container {
+	max-width: 400px;
+	margin: 80px auto;
+	padding: 30px;
+	border-radius: 10px;
+	background: white;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.login-container h2 {
+	margin-bottom: 25px;
+}
+</style>
 </head>
 <body>
-	<div class="container mt-5">
-		<h2 class="mb-4">Iniciar Sesión</h2>
+	<div class="container">
+		<div class="login-container">
+			<h2 class="text-center">Iniciar Sesión</h2>
 
-		<!-- Mostrar error -->
-		<div th:if="${param.error}" class="alert alert-danger" role="alert">
-			Usuario o contraseña incorrectos.</div>
+			<!-- Mostrar error -->
+			<div th:if="${param.error}" class="alert alert-danger" role="alert">
+				<i class="bi bi-x-circle"></i> Usuario o contraseña incorrectos.
+			</div>
 
-		<!-- Mostrar logout -->
-		<div th:if="${param.logout}" class="alert alert-success" role="alert">
-			Sesión cerrada exitosamente.</div>
+			<!-- Mostrar logout -->
+			<div th:if="${param.logout}" class="alert alert-success" role="alert">
+				<i class="bi bi-check-circle"></i> Sesión cerrada exitosamente.
+			</div>
 
-		<form th:action="@{/login}" method="post">
-			<input type="text" name="username" placeholder="Usuario" /> <input
-				type="password" name="password" placeholder="Contraseña" />
-			<button type="submit">Ingresar</button>
-		</form>
+			<form th:action="@{/login}" method="post">
+				<div class="mb-3">
+					<label for="username" class="form-label">Correo</label> <input
+						type="text" class="form-control" id="username" name="username"
+						placeholder="Ingresa tu correo" required>
+				</div>
+
+				<div class="mb-3">
+					<label for="password" class="form-label">Contraseña</label>
+					<div class="input-group">
+						<input type="password" class="form-control" id="password"
+							name="password" placeholder="Ingresa tu contraseña" required>
+						<button class="btn btn-outline-secondary" type="button"
+							id="togglePassword">
+							<i class="bi bi-eye" id="iconPassword"></i>
+						</button>
+					</div>
+				</div>
 
 
-		<p class="mt-3">
-			¿No tienes cuenta? <a th:href="@{/registro}">Regístrate aquí</a>
-		</p>
+				<div class="d-grid">
+					<button type="submit" class="btn btn-success">Ingresar</button>
+				</div>
+			</form>
+
+			<p class="mt-3 text-center">
+				¿No tienes cuenta? <a th:href="@{/registro}">Regístrate aquí</a>
+			</p>
+		</div>
 	</div>
+
+	<script>
+  const togglePassword = document.getElementById("togglePassword");
+  const password = document.getElementById("password");
+  const icon = document.getElementById("iconPassword");
+
+  togglePassword.addEventListener("click", () => {
+    const type = password.getAttribute("type") === "password" ? "text" : "password";
+    password.setAttribute("type", type);
+    icon.classList.toggle("bi-eye");
+    icon.classList.toggle("bi-eye-slash");
+  });
+</script>
+
+
+
+
+	<script
+		src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -1,18 +1,108 @@
-<!-- HomePublic.html -->
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<!doctype html>
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Bienvenido</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="/img/favicon.ico">
+<title>Inicio</title>
+<link
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+	rel="stylesheet">
+<style>
+.navbar-custom {
+	background-color: #397d54;
+	color: white;
+}
+
+.navbar-custom a {
+	color: white;
+	font-weight: bold;
+	text-decoration: none;
+	padding: 10px 15px;
+}
+
+.navbar-custom a:hover, .dropdown-menu a:hover {
+	color: #d4d4d4;
+}
+
+.dropdown-menu {
+	background-color: #397d54;
+	border: none;
+}
+
+.dropdown-menu a {
+	color: white;
+}
+
+.search-input {
+	border-radius: 20px;
+	padding: 5px 15px;
+	border: none;
+	width: 250px;
+}
+
+.search-button {
+	border-radius: 20px;
+	margin-left: 10px;
+}
+
+.fixed-top-bar {
+	position: fixed;
+	top: 0;
+	width: 100%;
+	z-index: 1030;
+}
+</style>
 </head>
-<body>
-<div class="container mt-5">
-    <h1 class="text-center">¡Bienvenido a Nuestro Sitio!</h1>
-    <div class="text-center mt-4">
-        <a class="btn btn-primary me-2" href="/registro">Registrarse</a>
-        <a class="btn btn-success" href="/login">Iniciar Sesión</a>
-    </div>
-</div>
+<body style="padding-top: 70px;">
+	<div
+		class="navbar-custom fixed-top-bar d-flex align-items-center justify-content-between px-4 py-2">
+		<!-- Sección izquierda: logo y menú -->
+		<div class="d-flex align-items-center">
+			<img th:src="@{/img/logofinal.png}" alt="Logo" height="50"
+				class="me-3"> <a href="#">Inicio</a>
+
+			<!-- Dropdown: Estaciones -->
+			<div class="dropdown">
+				<a class="dropdown-toggle" href="#" role="button"
+					data-bs-toggle="dropdown" aria-expanded="false"> Estaciones </a>
+				<ul class="dropdown-menu">
+					<li><a class="dropdown-item" href="#">Estación Central</a></li>
+					<li><a class="dropdown-item" href="#">Estación Norte</a></li>
+				</ul>
+			</div>
+
+			<!-- Dropdown: Pasajeros -->
+			<div class="dropdown">
+				<a class="dropdown-toggle" href="#" role="button"
+					data-bs-toggle="dropdown" aria-expanded="false"> Pasajeros </a>
+				<ul class="dropdown-menu">
+					<li><a class="dropdown-item" href="#">Información</a></li>
+					<li><a class="dropdown-item" href="#">Servicios</a></li>
+				</ul>
+			</div>
+
+			<a href="#">Tarifas</a> <a href="#">Club Línea 1</a>
+		</div>
+
+		<!-- Sección derecha: buscador + botones -->
+		<div class="d-flex align-items-center">
+			<input class="search-input" type="text"
+				placeholder="Escribe tu duda aquí">
+			<button class="btn btn-light search-button">Buscar</button>
+			<a class="btn btn-outline-light ms-3" href="/registro">Registrarse</a>
+			<a class="btn btn-light ms-2" href="/login" style="color: black;">Iniciar
+				Sesión</a>
+		</div>
+	</div>
+
+	<!-- Contenido principal -->
+	<div class="container mt-5 text-center">
+		<h1 class="mt-5">Bienvenido al Sistema Turístico</h1>
+		<p class="lead">Explora estaciones, tarifas, clima y más.</p>
+	</div>
+
+	<script
+		src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
