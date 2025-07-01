@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<link rel="icon" type="image/png" href="/img/favicon.ico">
+	<title>Gestión de Estaciones</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div th:replace="~{fragments/header :: navbar}"></div>
+
+<div class="container mt-4">
+	<h2 class="mb-4">Lista de Estaciones</h2>
+
+	<div class="mb-3">
+		<label for="searchValor" class="form-label">Buscar por Nombre</label>
+		<input type="text" class="form-control" id="searchValor" placeholder="Escribe un nombre...">
+	</div>
+
+	<div id="resultadoConteo" class="mb-3 text-muted"></div>
+
+	<button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#estacionModal" onclick="abrirModal()">Nueva Estación +</button>
+
+	<table class="table table-bordered table-striped">
+		<thead>
+			<tr>
+				<th>ID</th>
+				<th>Número</th>
+				<th>Nombre</th>
+				<th>Ubicación</th>
+				<th>Latitud</th>
+				<th>Longitud</th>
+				<th>Estado</th>
+				<th>Operaciones</th>
+			</tr>
+		</thead>
+		<tbody id="tablaEstaciones"></tbody>
+	</table>
+
+	<!-- Modal -->
+	<div class="modal fade" id="estacionModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<form id="estacionForm" th:action="@{/estacion/guardar}" method="post">
+					<div class="modal-header">
+						<h5 class="modal-title" id="modalTitle">Nueva Estación</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<input type="hidden" id="estId" name="estId">
+						<div class="mb-3">
+							<label for="estNumero" class="form-label">Número</label>
+							<input type="number" class="form-control" id="estNumero" name="estNumero" required>
+						</div>
+						<div class="mb-3">
+							<label for="estNombre" class="form-label">Nombre</label>
+							<input type="text" class="form-control" id="estNombre" name="estNombre" required>
+						</div>
+						<div class="mb-3">
+							<label for="estUbicacion" class="form-label">Ubicación</label>
+							<input type="text" class="form-control" id="estUbicacion" name="estUbicacion" required>
+						</div>
+						<div class="mb-3">
+							<label for="estLat" class="form-label">Latitud</label>
+							<input type="text" class="form-control" id="estLat" name="estLat" required>
+						</div>
+						<div class="mb-3">
+							<label for="estLong" class="form-label">Longitud</label>
+							<input type="text" class="form-control" id="estLong" name="estLong" required>
+						</div>
+					
+						<div class="mb-3">
+									<label for="estEstado" class="form-label">Estado</label> <select
+										class="form-select" id="estEstado" name="estEstado" required>
+										<option value="1" selected>Activo</option>
+										<option value="0">Inactivo</option>
+									</select>
+								</div>
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-primary">Guardar</button>
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+	<script>
+function abrirModal() {
+	document.getElementById("modalTitle").innerText = "Nueva Estación";
+	document.getElementById("estId").value = "";
+	document.getElementById("estNumero").value = "";
+	document.getElementById("estNombre").value = "";
+	document.getElementById("estUbicacion").value = "";
+	document.getElementById("estLat").value = "";
+	document.getElementById("estLong").value = "";
+	document.getElementById("estEstado").value = "1";
+}
+
+function editarEstacion(id) {
+	fetch('/estacion/editar/' + id)
+	.then(response => response.json())
+	.then(data => {
+		document.getElementById("modalTitle").innerText = "Editar Estación";
+		document.getElementById("estId").value = data.estId;
+		document.getElementById("estNumero").value = data.estNumero;
+		document.getElementById("estNombre").value = data.estNombre;
+		document.getElementById("estUbicacion").value = data.estUbicacion;
+		document.getElementById("estLat").value = data.estLat;
+		document.getElementById("estLong").value = data.estLong;
+        document.getElementById("estEstado").value = data.estEstado?.toString() ?? "1";
+
+
+		const modal = new bootstrap.Modal(document.getElementById("estacionModal"));
+		modal.show();
+	})
+	.catch(error => alert("❌ Error al cargar estación: " + error));
+}
+
+function eliminarEstacion(id) {
+	if (confirm("¿Deseas eliminar esta estación?")) {
+		fetch(`/estacion/eliminar/${id}`, { method: "DELETE" })
+		.then(res => {
+			if (res.status === 204) {
+				alert("✅ Estación eliminada correctamente.");
+				actualizarTabla();
+			} else {
+				alert("❌ Error al eliminar estación.");
+			}
+		});
+	}
+}
+
+document.getElementById("estacionForm").addEventListener("submit", function (event) {
+	event.preventDefault();
+	const form = event.target;
+	const formData = new FormData(form);
+
+	if (!formData.get("estId")) {
+		formData.delete("estId");
+	}
+
+	fetch("/estacion/guardar", {
+		method: "POST",
+		body: formData
+	})
+	.then(res => res.text())
+	.then(data => {
+		const modal = bootstrap.Modal.getInstance(document.getElementById("estacionModal"));
+		modal.hide();
+		document.getElementById("searchValor").value = "";
+		actualizarTabla();
+
+		if (data === "ok") {
+			alert("✅ Estación guardada correctamente.");
+		} else if (data.startsWith("error")) {
+			alert("❌ " + data.replace("error:", "").trim());
+		} else {
+			alert("⚠️ Error desconocido.");
+		}
+	})
+	.catch(error => alert("❌ Error al guardar estación: " + error));
+});
+
+document.getElementById("searchValor").addEventListener("input", function () {
+	const valor = this.value.trim();
+	if (valor === "") {
+		document.getElementById("resultadoConteo").textContent = "";
+		actualizarTabla();
+		return;
+	}
+	fetch(`/estacion/buscar?tipo=nombre&valor=${encodeURIComponent(valor)}`)
+	.then(res => res.json())
+	.then(estaciones => {
+		const tbody = document.getElementById("tablaEstaciones");
+		tbody.innerHTML = "";
+		document.getElementById("resultadoConteo").textContent = `Se encontraron ${estaciones.length} resultado(s).`;
+
+		estaciones.forEach(est => {
+			const fila = document.createElement("tr");
+            const estado = est.estEstado === 1 ? 'Activo' : 'Inactivo';
+			fila.innerHTML = `
+				<td>${est.estId}</td>
+				<td>${est.estNumero}</td>
+				<td>${est.estNombre}</td>
+				<td>${est.estUbicacion}</td>
+				<td>${est.estLat}</td>
+				<td>${est.estLong}</td>
+				<td>${estado}</td>
+				<td>
+					<button class="btn btn-warning btn-sm" onclick="editarEstacion(${est.estId})">Editar</button>
+					<button class="btn btn-danger btn-sm" onclick="eliminarEstacion(${est.estId})">Eliminar</button>
+				</td>
+			`;
+			tbody.appendChild(fila);
+		});
+	});
+});
+
+function actualizarTabla() {
+	fetch("/estacion/buscar?tipo=todos&valor=")
+	.then(res => res.json())
+	.then(estaciones => {
+		const tbody = document.getElementById("tablaEstaciones");
+		tbody.innerHTML = "";
+		estaciones.forEach(est => {
+			const fila = document.createElement("tr");
+			const estadoHTML = est.estEstado === 1
+            ? '<span class="badge bg-success">Activo</span>'
+            : '<span class="badge bg-danger">Inactivo</span>';
+			fila.innerHTML = `
+				<td>${est.estId}</td>
+				<td>${est.estNumero}</td>
+				<td>${est.estNombre}</td>
+				<td>${est.estUbicacion}</td>
+				<td>${est.estLat}</td>
+				<td>${est.estLong}</td>
+				<td>${estadoHTML}</td>
+				<td>
+					<button class="btn btn-warning btn-sm" onclick="editarEstacion(${est.estId})">Editar</button>
+					<button class="btn btn-danger btn-sm" onclick="eliminarEstacion(${est.estId})">Eliminar</button>
+				</td>
+			`;
+			tbody.appendChild(fila);
+		});
+	});
+}
+
+window.onload = actualizarTabla;
+</script>
+</div>
+</body>
+</html>

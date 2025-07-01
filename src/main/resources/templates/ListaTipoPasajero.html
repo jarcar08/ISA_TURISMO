@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="/img/favicon.ico">
+<title>Gestión de Tipo Pasajero</title>
+<link rel="stylesheet"
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+
+	<div th:replace="~{fragments/header :: navbar}"></div>
+
+	<div class="container mt-4">
+		<h2 class="mb-4">Lista de Tipo Pasajero</h2>
+
+		<!-- Botón para Buscar Persona -->
+		<div class="mb-3">
+			<label for="searchValor" class="form-label">Buscar por nombre
+				o DNI</label> <input type="text" class="form-control" id="searchValor"
+				placeholder="Escribe un nombre...">
+		</div>
+
+		<!-- Para Mostrar N° Resultados -->
+		<div id="resultadoConteo" class="mb-3 text-muted"></div>
+
+		<!-- Botón para agregar nueva tipo pasajero -->
+		<button class="btn btn-success mb-3" data-bs-toggle="modal"
+			data-bs-target="#tipopasajeroModal" onclick="abrirModal()">Nuevo
+			Tipo Pasajero +</button>
+
+		<!-- Tabla de usuarios -->
+		<table class="table table-bordered table-striped">
+			<thead>
+				<tr>
+					<th>Id</th>
+					<th>Nombre</th>
+					<th>Descripcion</th>
+					<th>Operaciones</th>
+				</tr>
+			</thead>
+			<tbody id="tablaTipoPasajeros">
+				<!-- Las filas se cargan dinámicamente con JavaScript -->
+			</tbody>
+		</table>
+
+		<!-- Modal para insertar/guardar -->
+		<div class="modal fade" id="tipopasajeroModal" tabindex="-1"
+			aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<form id="tipopasajeroForm" th:action="@{/tipopasajero/guardar}"
+						method="post">
+						<div class="modal-header">
+							<h5 class="modal-title" id="modalTitle">Nuevo Tipo Pasajero</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal"
+								aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<input type="hidden" id="tpId" name="tpId">
+							<div class="row">
+
+								<div class="col-md-6 mb-3">
+									<label for="tpNombre" class="form-label">Nombre <span
+										class="text-danger">*</span>
+									</label> <input type="text" class="form-control" id="tpNombre"
+										name="tpNombre" required>
+								</div>
+
+								<div class="col-md-12 mb-3">
+									<label for="tpDescripcion" class="form-label">Descripción
+										<span class="text-danger">*</span>
+									</label>
+									<textarea class="form-control" id="tpDescripcion"
+										name="tpDescripcion" rows="3" required></textarea>
+								</div>
+
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="submit" class="btn btn-primary">Guardar</button>
+							<button type="button" class="btn btn-secondary"
+								data-bs-dismiss="modal">Cancelar</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+		<!-- Scripts -->
+		<script
+			src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+		<script>
+		
+		//cargar modal de edicion
+        function abrirModal() {
+            document.getElementById("modalTitle").innerText = "Nuevo Tipo Pasajero";
+            document.getElementById("tpId").value = "";
+            document.getElementById("tpNombre").value = "";
+            document.getElementById("tpDescripcion").value = "";
+            
+        }      
+        
+        //EditarTipoPasajero
+       function editarTipoPasajero(id) {
+    fetch('/tipopasajero/editar/' + id)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error al obtener los datos de tipopasajero');
+            }
+            return response.json();
+        })
+        .then(data => {
+            document.getElementById("modalTitle").innerText = "Editar Tipo Pasajero";
+
+            document.getElementById("tpId").value = data.tpId;
+            document.getElementById("tpNombre").value = data.tpNombre;
+            document.getElementById("tpDescripcion").value = data.tpDescripcion;
+                       
+            const modal = new bootstrap.Modal(document.getElementById("tipopasajeroModal"));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Ocurrió un error al cargar los datos de tipopasajero');
+        });
+}
+       //Eliminar Tipo Pasajero
+        function eliminarTipoPasajero(id) {
+    if (confirm("¿Estás seguro de que deseas eliminar tipo pasajero?")) {
+    	fetch(`/tipopasajero/eliminar/${id}`, {
+            method: "DELETE"
+        })
+        .then(response => {
+            if (response.status === 204) {
+                alert("✅ Tipo Pasajero eliminada correctamente.");
+                actualizarTabla();
+            } else if (response.status === 404) {
+                alert("❌ Tipo Pasajero no encontrada.");
+            } else {
+                throw new Error("Error inesperado");
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("❌ Ocurrió un error al eliminar tipo pasajero.");
+        });
+    }
+}
+       
+    //para guardar tipopasajero
+    document.getElementById("tipopasajeroForm").addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const form = event.target;
+        const formData = new FormData(form);
+
+        const tpId = formData.get('tpId');
+        if (!tpId) {
+            formData.delete('tpId');
+        }
+
+        fetch("/tipopasajero/guardar", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Error al guardar tipo pasajero");
+            }
+            return response.text();
+        })
+        .then(data => {
+            const modal = bootstrap.Modal.getInstance(document.getElementById("tipopasajeroModal"));
+            modal.hide(); 
+            
+            document.getElementById("searchValor").value = "";
+            actualizarTabla();
+
+            if (data === "ok") {
+                alert("✅ tipo pasajero registrado exitosamente.");
+            } else if (data.startsWith("error")) {
+                alert("❌ " + data.replace("error:", "").trim());
+            } else {
+                alert("⚠️ Ocurrió un error desconocido.");
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("❌ Ocurrió un error al guardar tipo pasajero");
+        });
+    });
+
+    //Para Buscartipo pasajero
+   document.getElementById("searchValor").addEventListener("input", function () {
+    const valor = this.value.trim();
+    
+    if (valor === "") {
+        document.getElementById("resultadoConteo").textContent = "";
+        actualizarTabla();
+        return;
+    }
+
+    const tipo = /^\d+$/.test(valor) ? "dni" : "nombre";
+
+    fetch(`/tipopasajero/buscar?tipo=${tipo}&valor=${encodeURIComponent(valor)}`)
+        .then(response => response.json())
+        .then(tipopasajeros => {
+            const tbody = document.getElementById("tablaTipoPasajeros");
+            tbody.innerHTML = "";
+            
+            document.getElementById("resultadoConteo").textContent = `Se encontraron ${tipopasajeros.length} resultado(s).`;
+
+            tipopasajeros.forEach(tp => {
+                const fila = document.createElement("tr");
+                fila.innerHTML = `
+                    <td>${tp.tpId}</td>
+                    <td>${tp.tpNombre}</td>
+                    <td>${tp.tpDescripcion}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="editarTipoPasajero(${tp.tpId})">Editar</button>
+                        <button class="btn btn-danger btn-sm" onclick="eliminarTipoPasajero(${tp.tpId})">Eliminar</button>
+                    </td>
+                `;
+                tbody.appendChild(fila);
+            });
+        })
+        .catch(error => {
+            console.error("Error al buscar tipo pasajero:", error);
+        });
+});
+
+
+    
+    
+// Actualizar tabla de Tipo Pasajero
+function actualizarTabla() {
+    fetch("/tipopasajero/buscar?tipo=todos&valor=")
+        .then(response => response.json())
+        .then(tipopasajeros => {
+            const tbody = document.getElementById("tablaTipoPasajeros");
+            tbody.innerHTML = "";  
+
+            tipopasajeros.forEach(tp => {
+                const fila = document.createElement("tr");
+                fila.innerHTML = `
+                    <td>${tp.tpId}</td>
+                    <td>${tp.tpNombre}</td>
+                    <td>${tp.tpDescripcion}</td>
+                    
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="editarTipoPasajero(${tp.tpId})">Editar</button>
+                        <button class="btn btn-danger btn-sm" onclick="eliminarTipoPasajero(${tp.tpId})">Eliminar</button>
+                        </td>
+                `;
+                tbody.appendChild(fila);
+            });
+        })
+        .catch(error => {
+            console.error("Error al cargar los tipo pasajero:", error);
+            alert("Ocurrió un error al cargar los tipo pasajero");
+        });
+}
+
+//actualizarTabla al cargar la página
+window.onload = actualizarTabla;
+
+    </script>
+	</div>
+</body>
+</html>

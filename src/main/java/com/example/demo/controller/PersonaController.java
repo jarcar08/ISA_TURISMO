@@ -52,17 +52,6 @@ public class PersonaController {
 		return personaService.listaAllPersonas();
 	}
 
-	/*
-	 * @GetMapping("/buscar")
-	 * 
-	 * @ResponseBody public List<Persona> buscarPersonas(@RequestParam(name =
-	 * "tipo", required = false) String tipo,
-	 * 
-	 * @RequestParam(name = "valor", required = false) String valor) { if
-	 * ("nombre".equalsIgnoreCase(tipo) && valor != null && !valor.isEmpty()) {
-	 * return personaService.buscarPorNombre(valor); } return
-	 * personaService.listaAllPersonas(); }
-	 */
 
 	// Para editar Persona
 	@GetMapping("/editar/{id}")

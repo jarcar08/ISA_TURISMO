@@ -58,4 +58,10 @@ public class RolServiceImpl implements RolService {
 		return rolRepository.findByRolNombre(nombre);
 	}
 
+	@Override
+	public List<Rol> buscarPorId(int id) {
+		// TODO Auto-generated method stub
+		return rolRepository.findById(id).map(List::of).orElse(List.of());
+	}
+
 }

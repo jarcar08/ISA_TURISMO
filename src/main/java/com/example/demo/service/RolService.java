@@ -16,6 +16,8 @@ public interface RolService {
 
 	List<Rol> buscarPorNombre(String valor);
 
+    List<Rol> buscarPorId(int id);
+	
 	Rol obtenerPorNombre(String nombre);
 
 }

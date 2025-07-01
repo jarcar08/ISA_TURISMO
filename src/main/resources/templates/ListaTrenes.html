@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <link rel="icon" type="image/png" href="/img/favicon.ico">
-  <title>Lista de Roles</title>
+  <title>Lista de Trenes</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
         rel="stylesheet">
 </head>
@@ -19,45 +19,54 @@
         Buscar por ID o Nombre
       </label>
       <input type="text" id="searchValor" class="form-control"
-             placeholder="Escribe un ID o nombre de Rol...">
+             placeholder="Escribe un ID o nombre de tren...">
     </div>
     <div id="resultadoConteo" class="mb-3 text-muted"></div>
 
     <button class="btn btn-success mb-3"
             data-bs-toggle="modal"
-            data-bs-target="#rolModal"
+            data-bs-target="#trenModal"
             onclick="abrirModal()">
-      Nuevo Rol +
+      Nuevo Tren
     </button>
 
     <table class="table table-striped">
       <thead>
         <tr>
-          <th>ID</th><th>Nombre</th><th>Operaciones</th>
+          <th>ID</th><th>Nombre</th><th>Estado</th><th>Operaciones</th>
         </tr>
       </thead>
-      <tbody id="tablaRoles"></tbody>
+      <tbody id="tablaTrenes"></tbody>
     </table>
   </div>
 
   <!-- Modal Tren -->
-  <div class="modal fade" id="rolModal" tabindex="-1">
+  <div class="modal fade" id="trenModal" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
-        <form id="rolForm" th:action="@{/rol/guardar}" method="post">
+        <form id="trenForm" th:action="@{/trenes/guardar}" method="post">
           <div class="modal-header">
-            <h5 class="modal-title" id="modalTitle">Nuevo Rol</h5>
+            <h5 class="modal-title" id="modalTitle">Nuevo Tren</h5>
             <button type="button" class="btn-close"
                     data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
-            <input type="hidden" id="rolId" name="rolId">
+            <input type="hidden" id="trenId" name="trenId">
 
             <div class="mb-3">
               <label class="form-label">Nombre</label>
-              <input type="text" class="form-control" id="rolNombre" name="rolNombre" required>
+              <input type="text" class="form-control" id="trenNombre" name="trenNombre" required>
             </div>
 
+            <div class="mb-3">
+              <label class="form-label">Estado</label>
+              <select class="form-select" id="trenEstado" name="trenEstado" required>
+                <option value="">-- Selecciona Estado --</option>
+                <option th:each="e : ${estados}"
+                        th:value="${e}"
+                        th:text="${e}"></option>
+              </select>
+            </div>
           </div>
           <div class="modal-footer">
             <button type="submit" class="btn btn-primary">Guardar</button>
@@ -72,17 +81,18 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     // Renderiza lista en la tabla
-    function renderRol(list) {
-      const tbody = document.getElementById("tablaRoles");
+    function renderTrenes(list) {
+      const tbody = document.getElementById("tablaTrenes");
       tbody.innerHTML = "";
-      list.forEach(r => {
+      list.forEach(t => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${r.rolId}</td>
-          <td>${r.rolNombre}</td>
+          <td>${t.trenId}</td>
+          <td>${t.trenNombre}</td>
+          <td>${t.trenEstado}</td>
           <td>
-            <button class="btn btn-warning btn-sm" onclick="editar(${r.rolId})">Editar</button>
-            <button class="btn btn-danger btn-sm" onclick="eliminar(${r.rolId})">Eliminar</button>
+            <button class="btn btn-warning btn-sm" onclick="editar(${t.trenId})">Editar</button>
+            <button class="btn btn-danger btn-sm" onclick="eliminar(${t.trenId})">Eliminar</button>
           </td>`;
         tbody.appendChild(tr);
       });
@@ -90,9 +100,9 @@
 
     // Carga todos al inicio o tras operaciones
     function actualizarTabla() {
-      fetch("/rol/buscar?tipo=todos&valor=")
+      fetch("/trenes/buscar?tipo=todos&valor=")
         .then(r => r.json())
-        .then(renderRol);
+        .then(renderTrenes);
     }
 
     // Búsqueda por input
@@ -105,50 +115,51 @@
         }
         const isNum = /^\d+$/.test(v);
         const tipo = isNum ? 'id' : 'tipo';
-        fetch(`/rol/buscar?tipo=${tipo}&valor=${encodeURIComponent(v)}`)
+        fetch(`/trenes/buscar?tipo=${tipo}&valor=${encodeURIComponent(v)}`)
           .then(r => r.json())
           .then(list => {
-            renderRol(list);
+            renderTrenes(list);
             document.getElementById("resultadoConteo")
-                    .textContent = `Se encontraron ${list.length} rol(es).`;
+                    .textContent = `Se encontraron ${list.length} tren(es).`;
           });
       });
 
     // Abre modal en modo Nuevo
     function abrirModal() {
-      document.getElementById("modalTitle").innerText = "Nuevo Rol";
-      ["rolId","rolNombre"].forEach(id => 
+      document.getElementById("modalTitle").innerText = "Nuevo Tren";
+      ["trenId","trenNombre","trenEstado"].forEach(id => 
         document.getElementById(id).value = "");
     }
 
     // Editar
     function editar(id) {
-      fetch(`/rol/editar/${id}`)
+      fetch(`/trenes/editar/${id}`)
         .then(r => r.ok ? r.json() : Promise.reject())
         .then(t => {
-          document.getElementById("modalTitle").innerText = "Editar Rol";
-          document.getElementById("rolId").value = t.rolId;
-          document.getElementById("rolNombre").value = t.rolNombre;
-          new bootstrap.Modal(document.getElementById("rolModal")).show();
+          document.getElementById("modalTitle").innerText = "Editar Tren";
+          document.getElementById("trenId").value = t.trenId;
+          document.getElementById("trenNombre").value = t.trenNombre;
+          document.getElementById("trenEstado").value = t.trenEstado;
+          new bootstrap.Modal(document.getElementById("trenModal")).show();
         });
     }
 
     // Eliminar
     function eliminar(id) {
-      if (!confirm("¿Eliminar este rol?")) return;
-      fetch(`/rol/eliminar/${id}`, { method:'DELETE' })
+      if (!confirm("¿Eliminar este tren?")) return;
+      fetch(`/trenes/eliminar/${id}`, { method:'DELETE' })
         .then(r => { if (r.ok) actualizarTabla(); });
     }
 
     // Submit AJAX del formulario
-    document.getElementById("rolForm").addEventListener("submit", e => {
+    document.getElementById("trenForm").addEventListener("submit", e => {
       e.preventDefault();
       const f = new FormData(e.target);
-      if (!f.get("rolId")) f.delete("rolId");
+      if (!f.get("trenId")) f.delete("trenId");
       fetch(e.target.action, { method:'POST', body: f })
         .then(r => r.text())
         .then(resp => {
-          bootstrap.Modal.getInstance(document.getElementById("rolModal")).hide();
+          bootstrap.Modal.getInstance(document.getElementById("trenModal")).hide();
           actualizarTabla();
           alert(resp==='ok' ? "✅ Guardado" : resp);
         });

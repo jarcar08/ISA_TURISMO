@@ -1,7 +1,6 @@
 package com.example.demo.entity;
 
 import java.time.LocalDate;
-
 import org.springframework.format.annotation.DateTimeFormat;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
@@ -48,5 +47,4 @@ public class Clima {
 	@ManyToOne
 	@JoinColumn(name = "cliestId", referencedColumnName = "estId")
 	private Estacion estacion;
-
 }

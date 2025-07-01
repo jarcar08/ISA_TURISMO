@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestión de Zonas Turísticas</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+	
+		<div th:replace="~{fragments/header :: navbar}"></div>
+	
+
+  <div class="container mt-4">
+    <h2 class="mb-4">Lista de Zonas Turísticas</h2>
+
+    <div class="mb-3">
+      <label for="searchZona" class="form-label">Buscar por nombre</label>
+      <input type="text" class="form-control" id="searchZona" placeholder="Escribe un nombre...">
+    </div>
+
+    <div id="zonaConteo" class="mb-3 text-muted"></div>
+
+    <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#zonaModal" onclick="abrirModalZona()">Nueva Zona +</button>
+
+    <table class="table table-bordered table-striped">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Dirección</th>
+          <th>Descripción</th>
+          <th>Dificultad</th>
+          <th>Estación</th>
+          <th>Tipo Zona</th>
+          <th>Operaciones</th>
+        </tr>
+      </thead>
+      <tbody id="tablaZonas"></tbody>
+    </table>
+
+    <div class="modal fade" id="zonaModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form id="zonaForm">
+            <div class="modal-header">
+              <h5 class="modal-title" id="zonaModalTitle">Nueva Zona Turística</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <input type="hidden" id="zotId" name="zotId">
+
+              <div class="mb-3">
+                <label for="zotNombre" class="form-label">Nombre</label>
+                <input type="text" class="form-control" id="zotNombre" name="zotNombre" required>
+              </div>
+              <div class="mb-3">
+                <label for="zotDireccion" class="form-label">Dirección</label>
+                <input type="text" class="form-control" id="zotDireccion" name="zotDireccion">
+              </div>
+              <div class="mb-3">
+                <label for="zotDescripcion" class="form-label">Descripción</label>
+                <textarea class="form-control" id="zotDescripcion" name="zotDescripcion"></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="zotDificultad" class="form-label">Dificultad</label>
+                <select class="form-select" id="zotDificultad" name="zotDificultad">
+                  <option value="BAJA">Baja</option>
+                  <option value="MEDIA">Media</option>
+                  <option value="ALTA">Alta</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="estacion" class="form-label">Estación</label>
+                <select class="form-select" id="estacion" name="estacion">
+                  <option th:each="e : ${listaEstacion}" th:value="${e.estId}" th:text="${e.estNombre}"></option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="tipozona" class="form-label">Tipo Zona</label>
+                <select class="form-select" id="tipozona" name="tipozona">
+                  <option th:each="tz : ${listaTipoZona}" th:value="${tz.tzId}" th:text="${tz.tzNombre}"></option>
+                </select>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-primary">Guardar</button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      function abrirModalZona() {
+        document.getElementById("zonaModalTitle").innerText = "Nueva Zona Turística";
+        document.getElementById("zonaForm").reset();
+        document.getElementById("zotId").value = "";
+      }
+
+      function actualizarTablaZona() {
+    	    fetch("/zona/buscar?tipo=todos&valor=")
+    	        .then(response => response.json())
+    	        .then(zonas => {
+    	            const tbody = document.getElementById("tablaZonas");
+    	            tbody.innerHTML = "";
+
+    	            zonas.forEach(zona => {
+    	                const fila = document.createElement("tr");
+    	                fila.innerHTML = `
+    	                    <td>${zona.zotId}</td>
+    	                    <td>${zona.zotNombre}</td>
+    	                    <td>${zona.zotDireccion}</td>
+    	                    <td>${zona.zotDescripcion}</td>
+    	                    <td>${zona.zotDificultad}</td>
+    	                    <td>${zona.estacion?.estNombre ?? 'Sin estación'}</td>
+    	                    <td>${zona.tipozona?.tzNombre ?? 'Sin tipo'}</td>
+    	                    <td>
+    	                        <button class="btn btn-warning btn-sm" onclick="editarZona(${zona.zotId})">Editar</button>
+    	                        <button class="btn btn-danger btn-sm" onclick="eliminarZona(${zona.zotId})">Eliminar</button>
+    	                    </td>
+    	                `;
+    	                tbody.appendChild(fila);
+    	            });
+    	        })
+    	        .catch(error => {
+    	            console.error("Error al cargar zonas:", error);
+    	            alert("Ocurrió un error al cargar las Zonas Turísticas");
+    	        });
+    	}
+
+
+      document.getElementById("zonaForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+
+        fetch("/zona/guardar", {
+          method: "POST",
+          body: formData
+        })
+        .then(resp => resp.text())
+        .then(data => {
+          const modal = bootstrap.Modal.getInstance(document.getElementById("zonaModal"));
+          modal.hide();
+          actualizarTablaZona();
+          alert(data === "ok" ? "✅ Zona registrada exitosamente" : data);
+        });
+      });
+
+      function editarZona(id) {
+        fetch(`/zonaturistica/editar/${id}`)
+          .then(resp => resp.json())
+          .then(z => {
+            document.getElementById("zonaModalTitle").innerText = "Editar Zona Turística";
+            document.getElementById("zotId").value = z.zotId;
+            document.getElementById("zotNombre").value = z.zotNombre;
+            document.getElementById("zotDireccion").value = z.zotDireccion;
+            document.getElementById("zotDescripcion").value = z.zotDescripcion;
+            document.getElementById("zotDificultad").value = z.zotDificultad;
+            document.getElementById("estacion").value = z.estacion?.estId;
+            document.getElementById("tipozona").value = z.tipozona?.tzId;
+
+            const modal = new bootstrap.Modal(document.getElementById("zonaModal"));
+            modal.show();
+          });
+      }
+
+      function eliminarZona(id) {
+        if (!confirm("¿Seguro que deseas eliminar esta zona?")) return;
+
+        fetch(`/zona/eliminar/${id}`, { method: "DELETE" })
+          .then(resp => {
+            if (resp.status === 204) {
+              alert("✅ Zona eliminada correctamente");
+              actualizarTablaZona();
+            } else {
+              alert("❌ No se pudo eliminar la zona");
+            }
+          });
+      }
+
+      document.getElementById("searchZona").addEventListener("input", function() {
+        const valor = this.value.trim();
+        if (valor === "") {
+          actualizarTablaZona();
+          return;
+        }
+        fetch(`/zona/buscar?valor=${encodeURIComponent(valor)}`)
+          .then(resp => resp.json())
+          .then(data => {
+            const tbody = document.getElementById("tablaZonas");
+            tbody.innerHTML = "";
+            document.getElementById("zonaConteo").textContent = `Se encontraron ${data.length} resultado(s).`;
+
+            data.forEach(z => {
+              const fila = document.createElement("tr");
+              fila.innerHTML = `
+                <td>${z.zotId}</td>
+                <td>${z.zotNombre}</td>
+                <td>${z.zotDireccion}</td>
+                <td>${z.zotDescripcion}</td>
+                <td>${z.zotDificultad}</td>
+                <td>${z.estacion?.estNombre ?? 'Sin estación'}</td>
+                <td>${z.tipozona?.tzNombre ?? 'Sin tipo'}</td>
+                <td>
+                  <button class='btn btn-warning btn-sm' onclick='editarZona(${z.zotId})'>Editar</button>
+                  <button class='btn btn-danger btn-sm' onclick='eliminarZona(${z.zotId})'>Eliminar</button>
+                </td>`;
+              tbody.appendChild(fila);
+            });
+          });
+      });
+
+      window.onload = actualizarTablaZona;
+    </script>
+  </div>
+</body>
+</html>

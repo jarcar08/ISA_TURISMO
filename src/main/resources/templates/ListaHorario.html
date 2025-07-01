@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="/img/favicon.ico">
+<title>Gestión de Empresas</title>
+<link rel="stylesheet"
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+
+<div th:replace="~{fragments/header :: navbar}"></div>
+
+<body>
+	<div class="container mt-4">
+		<!--<h2 class="mb-4">Lista de Empresas</h2>-->
+
+
+		<br> <br> <br>
+		<!-- Botón para Buscar Persona -->
+		<div class="mb-3">
+			<input type="text" id="searchEstacion" class="form-control"
+				placeholder="Buscar por nombre de estación..."> <small
+				id="resultadoConteoHorarios" class="form-text text-muted"></small>
+		</div>
+
+
+
+		<div id="alertaExito"
+			class="alert alert-success alert-dismissible fade show d-none"
+			role="alert">
+			<strong>¡Éxito!</strong> Horario registrado correctamente.
+			<button type="button" class="btn-close" onclick="cerrarAlerta()"></button>
+		</div>
+
+		<!-- Botón para agregar nueva Empresa -->
+		<button class="btn btn-success mb-3" data-bs-toggle="modal"
+			data-bs-target="#horarioModal" onclick="abrirModal()">Nuevo
+			Horario +</button>
+
+		<!-- Tabla de Horario -->
+		<table class="table table-bordered table-striped">
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>Estacion</th>
+					<th>Hora Llegada</th>
+					<th>Hora Salida</th>
+					<th>Acciones</th>
+				</tr>
+			</thead>
+			<tbody id="tablaHorarios">
+				<!-- Las filas se cargan dinámicamente con JavaScript -->
+			</tbody>
+		</table>
+
+		<!-- Modal para insertar/guardar -->
+		<div class="modal fade" id="horarioModal" tabindex="-1"
+			aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<form th:action="@{/horario/guardar}" method="post"
+						id="formHorario">
+						<div class="modal-header">
+							<h5 class="modal-title" id="modalTitle">Nuevo Horario</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+						</div>
+						<div class="modal-body">
+							<input type="hidden" id="horId" name="horId">
+
+							<div class="col-md-6 mb-3">
+								<label for="estacion" class="form-label">Estacion </label> <select
+									class="form-select" id="estacion" name="estacion">
+									<option value="">-- Selecciona Estacion --</option>
+									<option th:each="est : ${listaEstacion}"
+										th:value="${est.estId}" th:text="${est.estNombre}"></option>
+								</select>
+							</div>
+
+							<div class="col-md-6 mb-3">
+								<label for="horLlegada" class="form-label">Hora de
+									Llegada</label> <input type="time" class="form-control" id="horLlegada"
+									name="horLlegada" required>
+							</div>
+
+							<div class="col-md-6 mb-3">
+								<label for="horSalida" class="form-label">Hora de Salida</label>
+								<input type="time" class="form-control" id="horSalida"
+									name="horSalida" required>
+							</div>
+
+						</div>
+						<div class="modal-footer">
+							<button type="submit" class="btn btn-success">Guardar</button>
+							<button type="button" class="btn btn-secondary"
+								data-bs-dismiss="modal">Cancelar</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+
+		<!-- Scripts -->
+		<script
+			src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+		<script>
+		
+		//cargar modal de edicion
+		function abrirModal() {
+		    document.getElementById("modalTitle").innerText = "Nuevo Horario";
+		    document.getElementById("horId").value = "";
+		    document.getElementById("estacion").value = "";
+		    document.getElementById("horLlegada").value = "";
+		    document.getElementById("horSalida").value = "";
+		}
+
+		//editar horario        
+        function editarHorario(id) {
+            fetch('/horario/editar/' + id)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error al obtener los datos de horario');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById("modalTitle").innerText = "Editar Horario";
+                    document.getElementById("horId").value = data.horId;
+                    document.getElementById("estacion").value = data.estacion.estId;
+                    document.getElementById("horLlegada").value = data.horLlegada;
+                    document.getElementById("horSalida").value = data.horSalida;
+                    
+                    const modal = new bootstrap.Modal(document.getElementById("horarioModal"));
+                    modal.show();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Ocurrió un error al cargar los datos de Horario');
+                });
+        }
+
+        document.getElementById("formHorario").addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            const form = event.target;
+            const formData = new FormData(form);
+
+            // Asegúrate de eliminar emprId si existe en el FormData, porque es autogenerado
+            const horId = formData.get('horId');
+				if (!horId) {
+    			formData.delete('horId'); // Solo lo eliminamos si está vacío (nuevo)
+			}
+            fetch("/horario/guardar", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Error al guardar el horario");
+                }
+                return response.text();
+            })
+            .then(data => {
+                const modal = bootstrap.Modal.getInstance(document.getElementById("horarioModal"));
+                modal.hide();
+                actualizarTabla();
+                mostrarAlertaExito();
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Ocurrió un error al guardar el horario");
+            });
+        });
+        
+        //eliminar horario
+        function eliminarHorario(id) {
+            if (confirm("¿Estás seguro de que deseas eliminar este horario?")) {
+                fetch(`/horario/eliminar/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Error al eliminar el horario");
+                    }
+                    actualizarTabla();
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("No se pudo eliminar el horario.");
+                });
+            }
+        }
+        
+        //mensaje de exito
+        function mostrarAlertaExito() {
+            const alerta = document.getElementById("alertaExito");
+            alerta.classList.remove("d-none");
+
+            setTimeout(() => {
+                alerta.classList.add("d-none");
+            }, 3000); // Se oculta después de 3 segundos
+        }
+
+        function cerrarAlerta() {
+            document.getElementById("alertaExito").classList.add("d-none");
+        }
+
+
+        //para buscar 
+        document.getElementById("searchEstacion").addEventListener("input", function () {
+    const valor = this.value.trim();
+
+    if (valor === "") {
+        document.getElementById("resultadoConteoHorarios").textContent = "";
+        actualizarTabla();
+        return;
+    }
+
+    fetch(`/horario/buscar?tipo=nombreEstacion&valor=${encodeURIComponent(valor)}`)
+        .then(response => response.json())
+        .then(horarios => {
+            const tbody = document.getElementById("tablaHorarios");
+            tbody.innerHTML = "";
+
+            document.getElementById("resultadoConteoHorarios").textContent = `Se encontraron ${horarios.length} resultado(s).`;
+
+            horarios.forEach(horario => {
+                const fila = document.createElement("tr");
+                const estacion = horario.estacion?.estNombre ?? "Sin estación";
+
+                fila.innerHTML = `
+                    <td>${horario.horId}</td>
+                    <td>${estacion}</td>
+                    <td>${horario.horLlegada}</td>
+                    <td>${horario.horSalida}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="editarHorario(${horario.horId})">Editar</button>
+                        <button class="btn btn-danger btn-sm" onclick="eliminarHorario(${horario.horId})">Eliminar</button>
+                    </td>
+                `;
+                tbody.appendChild(fila);
+            });
+        })
+        .catch(error => {
+            console.error("Error al buscar horarios:", error);
+        });
+});
+
+
+        
+        
+		//mostrar tabla
+        function actualizarTabla() {
+            fetch("/horario/buscar?tipo=todos&valor=")
+                .then(response => response.json())
+                .then(horarios => {
+                    const tbody = document.getElementById("tablaHorarios");
+                    tbody.innerHTML = "";
+
+                    horarios.forEach(hor => {
+                        const fila = document.createElement("tr");
+                        const estacion = hor.estacion.estNombre || "Sin estación";
+
+                        fila.innerHTML = `
+                            <td>${hor.horId}</td>
+                            <td>${estacion}</td>
+                            <td>${hor.horLlegada}</td>
+                            <td>${hor.horSalida}</td>
+                            <td>
+                                <button class="btn btn-warning btn-sm" onclick="editarHorario(${hor.horId})">Editar</button>
+                                <button class="btn btn-danger btn-sm" onclick="eliminarHorario(${hor.horId})">Eliminar</button>
+                            </td>
+                        `;
+                        tbody.appendChild(fila);
+                    });
+                })
+                .catch(error => {
+                    console.error("Error al cargar los Horarios:", error);
+                    alert("Ocurrió un error al cargar los Horarios");
+                });
+        }
+
+
+        window.onload = actualizarTabla;
+    </script>
+	</div>
+</body>
+</html>

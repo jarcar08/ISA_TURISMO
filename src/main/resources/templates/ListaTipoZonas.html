@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Lista de Tipos de Zona</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+</head>
+<body>
+
+	<div th:replace="~{fragments/header :: navbar}"></div>
+
+  <div class="container mt-4">
+    <h2>Tipos de Zona</h2>
+
+    <div class="mb-3">
+      <label for="searchValor" class="form-label">
+        Buscar por ID o Nombre
+      </label>
+      <input type="text" id="searchValor" class="form-control"
+             placeholder="Escribe un ID o nombre...">
+    </div>
+    <div id="resultadoConteo" class="mb-3 text-muted"></div>
+
+    <button class="btn btn-success mb-3"
+            data-bs-toggle="modal"
+            data-bs-target="#tipoZonaModal"
+            onclick="abrirModal()">
+      Nuevo TipoZona
+    </button>
+
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>ID</th><th>Nombre</th><th>Operaciones</th>
+        </tr>
+      </thead>
+      <tbody id="tablaTipoZonas"></tbody>
+    </table>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal fade" id="tipoZonaModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="tipoZonaForm" th:action="@{/tipozonas/guardar}" method="post">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalTitle">Nuevo TipoZona</h5>
+            <button type="button" class="btn-close"
+                    data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="tzId" name="tzId">
+            <div class="mb-3">
+              <label class="form-label">Nombre</label>
+              <input type="text" class="form-control" id="tzNombre" name="tzNombre" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Guardar</button>
+            <button type="button" class="btn btn-secondary"
+                    data-bs-dismiss="modal">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function renderTipoZonas(list) {
+      const tbody = document.getElementById("tablaTipoZonas");
+      tbody.innerHTML = "";
+      list.forEach(z => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${z.tzId}</td>
+          <td>${z.tzNombre}</td>
+          <td>
+            <button class="btn btn-warning btn-sm" onclick="editar(${z.tzId})">Editar</button>
+            <button class="btn btn-danger btn-sm" onclick="eliminar(${z.tzId})">Eliminar</button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function actualizarTabla() {
+      fetch("/tipozonas/buscar?tipo=todos&valor=")
+        .then(r => r.json())
+        .then(renderTipoZonas);
+    }
+
+    document.getElementById("searchValor")
+      .addEventListener("input", function() {
+        const v = this.value.trim();
+        if (!v) {
+          document.getElementById("resultadoConteo").textContent = "";
+          return actualizarTabla();
+        }
+        const isNum = /^\d+$/.test(v);
+        const tipo = isNum ? 'id' : 'tipo';
+        fetch(`/tipozonas/buscar?tipo=${tipo}&valor=${encodeURIComponent(v)}`)
+          .then(r => r.json())
+          .then(list => {
+            renderTipoZonas(list);
+            document.getElementById("resultadoConteo")
+                    .textContent = `Se encontraron ${list.length} tipo(s).`;
+          });
+      });
+
+    function abrirModal(){
+      document.getElementById("modalTitle").innerText = "Nuevo TipoZona";
+      ["tzId","tzNombre"].forEach(id => document.getElementById(id).value = "");
+    }
+
+    function editar(id) {
+      fetch(`/tipozonas/editar/${id}`)
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(z => {
+          document.getElementById("modalTitle").innerText = "Editar TipoZona";
+          document.getElementById("tzId").value = z.tzId;
+          document.getElementById("tzNombre").value = z.tzNombre;
+          new bootstrap.Modal(document.getElementById("tipoZonaModal")).show();
+        });
+    }
+
+    function eliminar(id){
+      if(!confirm("Eliminar este tipo de zona?")) return;
+      fetch(`/tipozonas/eliminar/${id}`, { method: 'DELETE' })
+        .then(r => { if(r.ok) actualizarTabla(); });
+    }
+
+    document.getElementById("tipoZonaForm")
+      .addEventListener("submit", e => {
+        e.preventDefault();
+        const f = new FormData(e.target);
+        if (!f.get("tzId")) f.delete("tzId");
+        fetch(e.target.action, { method:'POST', body: f })
+          .then(r => r.text())
+          .then(resp => {
+            bootstrap.Modal.getInstance(document.getElementById("tipoZonaModal")).hide();
+            actualizarTabla();
+            alert(resp==='ok' ? "✅ Guardado" : resp);
+          });
+      });
+
+    window.onload = actualizarTabla;
+  </script>
+</body>
+</html>
