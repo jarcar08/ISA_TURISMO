@@ -1,106 +1,197 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
-  <link rel="icon" type="image/png" href="/img/favicon.ico">
-  <title>Mapa de Estaciones y Tren</title>
-  <link rel="stylesheet"
-	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- Leaflet CSS -->
+  <title>Mapa de Estaciones - Tren Interactivo</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-
   <style>
     #map {
-      height: 100vh;
-      width: 100%;
+      height: 600px;
+      width: 80%;
+      margin: 20px auto;
+      border: 2px solid #397d54;
+      border-radius: 10px;
     }
   </style>
 </head>
 <body>
-	
-		<div th:replace="~{fragments/header :: navbar}"></div>
-	
-
+  <h2 style="text-align:center;">Mapa Interactivo - Estaciones y Tren</h2>
   <div id="map"></div>
 
-  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script th:inline="javascript">
-  /*<![CDATA[*/
-  const estaciones = /*[[${estaciones}]]*/ [];
+/*<![CDATA[*/
+const estaciones = /*[[${estaciones}]]*/ [];
 
-  const map = L.map('map').setView([-9.19, -75.015], 6);
+const map = L.map('map').setView([-9.19, -75.015], 6);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors'
-  }).addTo(map);
+const latlngs = [];
+const markers = [];
+let origenIndex = null;
+let destinoIndex = null;
+let pasajeroMarker = null;
+let destinoMarker = null;
+let trenMarker = null;
+let embarcado = false;
+let desembarcado = false;
+let direccion = 1;
 
-  const latlngs = [];
+const trenIcon = L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/64/724/724080.png', iconSize: [40, 40], iconAnchor: [20, 20] });
+const pasajeroIcon = L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/64/149/149071.png', iconSize: [32, 32], iconAnchor: [16, 16] });
 
-  estaciones.forEach(est => {
-    const clima = est.clima || {};
-    const zonas = est.zonas || [];
+estaciones.forEach((est, i) => {
+  const clima = est.clima || {};
+  const zonas = est.zonas || [];
 
-    const popupContent = `
-      <strong>${est.nombre}</strong><br/>
-      <em>Ubicación:</em> ${est.ubicacion}<br/>
-      <em>Clima:</em> ${clima.estado || 'N/D'}<br/>
-      <em>Temperatura:</em> ${clima.tempMin || '-'}°C - ${clima.tempMax || '-'}°C<br/>
-      <em>Recomendación:</em> ${clima.recomendacion || 'Ninguna'}<br/>
-      <hr/>
-      <strong>Zonas Turísticas:</strong>
-      <ul>
-        ${zonas.length > 0 ? zonas.map(z => `<li>${z.nombre} (${z.dificultad})</li>`).join('') : '<li>No hay zonas</li>'}
-      </ul>
-    `;
+  const popupContent = `
+    <strong>${est.nombre}</strong><br/>
+    <em>Ubicación:</em> ${est.ubicacion}<br/>
+    <em>Clima:</em> ${clima.estado || 'N/D'}<br/>
+    <em>Temp:</em> ${clima.tempMin || '-'}°C - ${clima.tempMax || '-'}°C<br/>
+    <em>Recomendación:</em> ${clima.recomendacion || 'Ninguna'}<br/>
+    <hr/>
+    <strong>Zonas Turísticas:</strong>
+    <ul>${zonas.length ? zonas.map(z => `<li>${z.nombre} (${z.dificultad})</li>`).join('') : '<li>No hay zonas</li>'}</ul>
+    <hr/>
+    <em>Haz clic para elegir esta estación</em>
+  `;
 
-    L.marker([est.lat, est.lng]).addTo(map)
-      .bindPopup(popupContent);
+  const marker = L.marker([est.lat, est.lng]).addTo(map)
+    .bindPopup(popupContent)
+    .bindTooltip(est.nombre, { permanent: false, direction: 'top' })
+    .on('click', () => seleccionarEstacion(i));
 
-    latlngs.push([est.lat, est.lng]);
-  });
+  latlngs.push([est.lat, est.lng]);
+  markers.push(marker);
+});
 
-  // Verificar si hay estaciones
-  if (latlngs.length === 0) {
-    alert("⚠️ No hay estaciones disponibles para mostrar.");
-  } else {
-    // Generar ruta aleatoria
-    const shuffled = [...latlngs].sort(() => 0.5 - Math.random()).slice(0, Math.min(5, latlngs.length));
+function calcularTiempoEstaciones(origen, destino, dir) {
+  let tiempo = 0;
+  let i = origen;
+  while (i !== destino) {
+    i += dir;
+    if (i < 0) i = latlngs.length - 1;
+    if (i >= latlngs.length) i = 0;
+    tiempo += 5; // segundos por estación
+  }
+  return tiempo;
+}
 
-    const polyline = L.polyline(shuffled, {
-      color: 'blue',
-      weight: 5,
-      opacity: 0.7
-    }).addTo(map);
+function mostrarInfoVisual(origenIdx, destinoIdx, texto) {
+  if (!latlngs[origenIdx] || !latlngs[destinoIdx]) return;
+  const distancia = map.distance(latlngs[origenIdx], latlngs[destinoIdx]) / 1000;
+  const tiempo = calcularTiempoEstaciones(origenIdx, destinoIdx, direccion);
+  L.popup({ closeButton: false })
+    .setLatLng([
+      (latlngs[origenIdx][0] + latlngs[destinoIdx][0]) / 2,
+      (latlngs[origenIdx][1] + latlngs[destinoIdx][1]) / 2
+    ])
+    .setContent(`📍 ${texto}<br>📏 Distancia: ${distancia.toFixed(2)} km<br>⏳ Tiempo estimado: ${tiempo} s`)
+    .openOn(map);
+}
 
-    map.fitBounds(polyline.getBounds());
+function seleccionarEstacion(index) {
+  if (desembarcado) {
+    // Reiniciar si ya terminó
+    origenIndex = null;
+    destinoIndex = null;
+    embarcado = false;
+    desembarcado = false;
+    alert("🔁 Selección reiniciada. Elige estación de embarque.");
+  }
 
-    const trenIcon = L.icon({
-      iconUrl: 'https://cdn-icons-png.flaticon.com/64/724/724080.png',
-      iconSize: [40, 40],
-      iconAnchor: [20, 20],
-      popupAnchor: [0, -20]
-    });
+  if (origenIndex === null) {
+    origenIndex = index;
+    pasajeroMarker = L.marker(latlngs[origenIndex], { icon: pasajeroIcon }).addTo(map).bindPopup("🧍 Embarcar aquí").openPopup();
+    alert("✅ Estación de embarque seleccionada. Ahora haz clic en tu destino.");
+  } else if (destinoIndex === null && index !== origenIndex) {
+    destinoIndex = index;
+    destinoMarker = L.marker(latlngs[destinoIndex], {
+      icon: L.icon({
+        iconUrl: 'https://cdn-icons-png.flaticon.com/64/484/484169.png',
+        iconSize: [32, 32],
+        iconAnchor: [16, 32]
+      })
+    }).addTo(map).bindPopup(`🎯 Destino: ${estaciones[destinoIndex].nombre}`).openPopup();
+    alert("🚆 Esperando al tren para embarcar...");
+  }
+}
 
-    // Crear y mover el tren
-    if (shuffled.length > 0) {
-      let trenMarker = L.marker(shuffled[0], { icon: trenIcon }).addTo(map).bindPopup("🚆 Tren en ruta");
-      let index = 1;
+if (latlngs.length === 0) {
+  alert("⚠️ No hay estaciones disponibles.");
+} else {
+  const ruta = L.polyline(latlngs, { color: 'blue', weight: 4, opacity: 0.7 }).addTo(map);
+  map.fitBounds(ruta.getBounds());
 
-      function moverTren() {
-        if (index < shuffled.length) {
-          trenMarker.setLatLng(shuffled[index]);
-          index++;
-          setTimeout(moverTren, 1500);
-        }
+  let trenIndex = Math.floor(Math.random() * latlngs.length);
+  direccion = Math.random() < 0.5 ? 1 : -1;
+  trenMarker = L.marker(latlngs[trenIndex], { icon: trenIcon }).addTo(map).bindPopup("🚆 Esperando...").openPopup();
+
+  function moverTren() {
+    trenMarker.setLatLng(latlngs[trenIndex]);
+    trenMarker.setPopupContent(`🚆 En espera...<br>${direccion === 1 ? "🟢 Ida" : "🔄 Vuelta"}`);
+    trenMarker.openPopup();
+
+    setTimeout(() => {
+      trenIndex += direccion;
+      if (trenIndex < 0 || trenIndex >= latlngs.length) {
+        direccion *= -1;
+        trenIndex += direccion;
       }
 
-      moverTren();
-    }
+      trenMarker.setLatLng(latlngs[trenIndex]);
+      trenMarker.setPopupContent(`🚆 En ruta<br>${direccion === 1 ? "🟢 Ida" : "🔄 Vuelta"}`);
+      trenMarker.openPopup();
+
+      if (!embarcado && origenIndex !== null && destinoIndex !== null && trenIndex !== origenIndex) {
+    	  mostrarInfoVisual(trenIndex, origenIndex, "Esperando embarque");
+    	}
+
+      if (!embarcado && trenIndex === origenIndex) {
+        embarcado = true;
+        map.removeLayer(pasajeroMarker);
+        const embarquePopup = L.popup({ closeButton: false, autoClose: false })
+        .setLatLng(latlngs[trenIndex])
+        .setContent("🚍 Pasajero embarcado. En camino al destino.")
+        .openOn(map);
+
+      setTimeout(() => map.closePopup(embarquePopup), 3000);
+
+      }
+
+      if (embarcado && trenIndex !== destinoIndex && !desembarcado) {
+    	  mostrarInfoVisual(trenIndex, destinoIndex, "Pasajero en ruta hacia destino");
+    	}
+
+      if (embarcado && !desembarcado && trenIndex === destinoIndex) {
+        desembarcado = true;
+        const desembarquePopup = L.popup()
+        .setLatLng(latlngs[trenIndex])
+        .setContent(`✅ Pasajero desembarcado en: <strong>${estaciones[trenIndex].nombre}</strong>`)
+        .openOn(map);
+
+      setTimeout(() => {
+        map.closePopup(desembarquePopup);
+
+        if (destinoMarker) {
+          map.removeLayer(destinoMarker);
+        }
+
+        alert("✅ Pasajero desembarcado. Puedes seleccionar nuevas estaciones.");
+      }, 4000);
+
+      }
+
+      setTimeout(moverTren, 5000);
+    }, 5000);
   }
-  /*]]>*/
-  </script>
+
+  moverTren();
+}
+/*]]>*/
+</script>
 </body>
 </html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <link rel="icon" type="image/png" href="/img/favicon.ico">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    .navbar-custom {
+      background-color: #397d54;
+      color: white;
+    }
+
+    .navbar-custom a,
+    .navbar-custom .dropdown-toggle,
+    .navbar-custom .dropdown-menu a {
+      color: white !important;
+      font-weight: bold;
+      text-decoration: none;
+      padding: 10px 15px;
+    }
+
+    .navbar-custom a:hover,
+    .navbar-custom .dropdown-menu a:hover {
+      color: #d4d4d4 !important;
+    }
+
+    .dropdown-menu {
+      background-color: #397d54;
+      border: none;
+    }
+
+    .search-input {
+      border-radius: 20px;
+      padding: 5px 15px;
+      border: none;
+      width: 250px;
+    }
+
+    .search-button {
+      border-radius: 20px;
+      margin-left: 10px;
+    }
+
+    .fixed-top-bar {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 1030;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar-custom fixed-top-bar d-flex align-items-center justify-content-between px-4 py-2" th:fragment="navbar">
+    <!-- Sección izquierda -->
+    <div class="d-flex align-items-center">
+      <img th:src="@{/img/logofinal.png}" alt="Logo" height="50" class="me-3">
+      <a th:href="@{/}" class="me-2">Inicio</a>
+
+      <div class="dropdown me-2">
+        <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Estaciones y Horarios</a>
+        <ul class="dropdown-menu">
+          <li><a class="dropdown-item" th:href="@{/mapa}">Estacion</a></li>
+          <li><a class="dropdown-item" href="@{/horario/HorarioPublico}">Horarios</a></li>
+        </ul>
+      </div>
+
+       <a th:href="@{/pasajeros/PasajeroPublica}" class="me-2">Pasajeros</a>
+
+      <a th:href="@{/tarifas/TarifaPublica}" class="me-2">Tarifas</a>
+    </div>
+
+    <!-- Sección derecha -->
+    <div class="d-flex align-items-center">
+      <input class="search-input" type="text" placeholder="Escribe tu duda aquí">
+      <button class="btn btn-light search-button">Buscar</button>
+      <a class="btn btn-outline-light ms-3" th:href="@{/registro}"><strong>Registrarse</strong></a>
+	  <a class="btn btn-light ms-2 btn-light-black-text" th:href="@{/login}">Iniciar Sesión</a>
+    </div>
+  </nav>
+
+  <!-- Asegura cargar Bootstrap JS si estás probando el dropdown -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

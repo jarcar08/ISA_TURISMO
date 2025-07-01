@@ -19,7 +19,7 @@ public class SecurityConfig {
 	private final UsuarioDetalleService usuarioDetalleService;
     private final CustomSuccessHandler customSuccessHandler;
 
-
+    /*
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -48,7 +48,46 @@ public class SecurityConfig {
                 .requestMatchers("/zona/eliminar").hasRole("ADMIN")
                 .requestMatchers("/tipopasajero/ListaZonaTuristica").hasRole("ADMIN")
                 .requestMatchers("/tipopasajero/eliminar").hasRole("ADMIN")           
-                .requestMatchers("/","/registro", "/login", "/assets/**", "/img/**", "/css/**", "/js/**").permitAll()
+                .requestMatchers("/TarifaPublica","/registro", "/login", "/assets/**", "/img/**", "/css/**", "/js/**").permitAll()
+                .anyRequest().authenticated()
+            )*/
+    
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http
+            .authorizeHttpRequests(auth -> auth
+                // Rutas públicas
+                .requestMatchers(
+                    "/tarifas/TarifaPublica",
+                    "/mapa",
+                    "/registro", 
+                    "/login", 
+                    "/assets/**", 
+                    "/img/**", 
+                    "/css/**", 
+                    "/js/**"
+                ).permitAll()
+
+                // Rutas para GUEST
+                .requestMatchers("/homeGuest").hasRole("GUEST")
+
+                // Rutas protegidas por rol ADMIN
+                .requestMatchers(
+                    "/homeAdmin",
+                    "/persona/**",
+                    "/usuario/**",
+                    "/tarifas/**",
+                    "/tipozonas/**",
+                    "/trenes/**",
+                    "/rol/**",
+                    "/clima/**",
+                    "/estacion/**",
+                    "/horario/**",
+                    "/zona/**",
+                    "/tipopasajero/**"
+                ).hasRole("ADMIN")
+
+                // Cualquier otra ruta necesita autenticación
                 .anyRequest().authenticated()
             )
             .csrf(csrf -> csrf.disable())

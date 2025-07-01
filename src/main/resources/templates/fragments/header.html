@@ -5,7 +5,7 @@
 	<!-- src/main/resources/templates/fragments/navbar.html -->
 <nav class="navbar navbar-dark bg-dark fixed-top" th:fragment="navbar">
   <div class="container-fluid">
-    <a class="navbar-brand" href="/mapa">SIAT</a>
+    <a class="navbar-brand" href="#">SIAT</a>
     
 	 <!-- Buscador -->
         <form class="d-flex mt-3" role="search">
@@ -101,7 +101,6 @@
             </a>
             <ul class="dropdown-menu dropdown-menu-dark">
               <li><a class="dropdown-item" href="#">Ver perfil</a></li>
-              <li><a class="dropdown-item" href="#">Editar perfil</a></li>
               <li><hr class="dropdown-divider"></li>
               <li>
                 <form th:action="@{/logout}" method="post">

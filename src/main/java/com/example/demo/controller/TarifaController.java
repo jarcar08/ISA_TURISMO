@@ -33,6 +33,16 @@ public class TarifaController {
         mav.addObject("tarifa", new Tarifa());
         return mav;
     }
+    
+    // --- Para listar la página principal con Thymeleaf + modal ---
+    @GetMapping("/TarifaPublica")
+    public ModelAndView listAllTarPublicas() {
+        ModelAndView mav = new ModelAndView("TarifaPublica");
+        mav.addObject("tarifas", tarifaService.listAllTarifas());
+        return mav;
+    }
+
+    
 
     // --- Guardar / crear / actualizar vía AJAX (devuelve "ok" o "error:...") ---
     @PostMapping("/guardar")
